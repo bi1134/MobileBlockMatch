@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93e4785b0bbab154cb92469203d65384, type: 3}
+  m_Name: YellowFood
+  m_EditorClassIdentifier: 
+  displayName: Yellow Cookie
+  color: 3
+  prefab: {fileID: 8989391374625568864, guid: 3d73177c0a7ffb5449a1149831060399, type: 3}

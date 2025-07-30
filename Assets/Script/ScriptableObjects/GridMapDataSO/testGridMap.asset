@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abe13ef36298e5c429a08bd64af99f87, type: 3}
+  m_Name: testGridMap
+  m_EditorClassIdentifier: 
+  <GridSize>k__BackingField: {x: 10, y: 10}
+  <GridOrigin>k__BackingField: {x: 0, y: 0, z: 0}
+  <MaxMoveCount>k__BackingField: 15
+  <BlockedCells>k__BackingField: []
+  <Trays>k__BackingField:
+  - trayPrefab: {fileID: 6076032367857896638, guid: 2105d09c3651e1f45aa74e915f91aa5d, type: 3}
+    position: {x: -2, y: 0, z: 2}
+    uniqueID: 0
+  - trayPrefab: {fileID: 6824083983767436983, guid: 01ce15447c02f83438f71c01cf02c140, type: 3}
+    position: {x: -2, y: 0, z: -2}
+    uniqueID: 1
+  - trayPrefab: {fileID: 6076032367857896638, guid: 2e2f7d9fbae223d4a83d1561b3ad3909, type: 3}
+    position: {x: 1, y: 0, z: -1}
+    uniqueID: 2
+  - trayPrefab: {fileID: 6076032367857896638, guid: 94e9bbe87345a6b418aaeafcedcc5ee1, type: 3}
+    position: {x: 2, y: 0, z: 1}
+    uniqueID: 3
+  - trayPrefab: {fileID: 6076032367857896638, guid: 6fd1cec81dfe57f4f8741e2e6fad2155, type: 3}
+    position: {x: 0, y: 0, z: 3}
+    uniqueID: 4
+  - trayPrefab: {fileID: 6076032367857896638, guid: 3907be54a6339ae428c38a2f01963255, type: 3}
+    position: {x: 1, y: 0, z: 2}
+    uniqueID: 5
+  - trayPrefab: {fileID: 6076032367857896638, guid: 9b88720d93eb24947a5a5cf4b2cfd967, type: 3}
+    position: {x: 2, y: 0, z: -2}
+    uniqueID: 6
+  - trayPrefab: {fileID: 7909296624409361627, guid: 07868024781d6d6458af8c6a7669b5d2, type: 3}
+    position: {x: 0, y: 0, z: -3}
+    uniqueID: 7
+  <Spawners>k__BackingField:
+  - traySpawnerPrefab: {fileID: 7082656774169433024, guid: d61573d65a1e2524b9f5327111e5a696, type: 3}
+    TraysToSpawn:
+    - trayPrefab: {fileID: 6076032367857896638, guid: f29a2883571eeda47b8e713cfe6ef5d2, type: 3}
+      position: {x: 0, y: 0, z: 0}
+      uniqueID: 8
+    - trayPrefab: {fileID: 6076032367857896638, guid: 94e9bbe87345a6b418aaeafcedcc5ee1, type: 3}
+      position: {x: 0, y: 0, z: 0}
+      uniqueID: 9
+    - trayPrefab: {fileID: 7909296624409361627, guid: 07868024781d6d6458af8c6a7669b5d2, type: 3}
+      position: {x: 0, y: 0, z: 0}
+      uniqueID: 10
+    - trayPrefab: {fileID: 277382742673784805, guid: 399cc017965357047a6a96f3234a1d14, type: 3}
+      position: {x: 0, y: 0, z: 0}
+      uniqueID: 11
+    position: {x: 0, y: 0, z: 0}
+    direction: 0
+  <ActiveFoodTheme>k__BackingField:
+  - {fileID: 11400000, guid: 6c6a3ecd7d4700243859cb4274f6a9d0, type: 2}
+  - {fileID: 11400000, guid: 67906e77c2a156943982056e8a5f6c7b, type: 2}
+  - {fileID: 11400000, guid: ea3d57324cc095042bfd410f8a598632, type: 2}
+  - {fileID: 11400000, guid: 66a706040fb058c4cbf81e77382ab425, type: 2}
+  - {fileID: 11400000, guid: 568c8a131d7f55c40a6e335da9460e38, type: 2}
