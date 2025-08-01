@@ -61,9 +61,12 @@ public class Tray : GridObjects
 
         yield return new WaitForSeconds(0.2f);
 
-        yield return CheckAndStartRecursiveSwap(() =>
+        if (IsUnlocked()) 
         {
-        });
+            yield return CheckAndStartSwap(() =>
+            {
+            });
+        }
     }
 
     private IEnumerator DestroyAfterVisual()
@@ -145,8 +148,9 @@ public class Tray : GridObjects
     {
         Tween dropTween = visual.PlayDropAnimationSnap(placementSystem.grid.CellToWorld(snapCell));
         yield return dropTween.WaitForCompletion();
+        TrayController.Instance.moveCheckCooldown = 0.1f;
 
-        yield return CheckAndStartRecursiveSwap(null);
+        yield return CheckAndStartSwap(null);
     }
 
     #endregion
@@ -222,7 +226,7 @@ public class Tray : GridObjects
     #endregion
 
     #region Tray Handling
-    public IEnumerator CheckAndStartRecursiveSwap(Action onFinished)
+    public IEnumerator CheckAndStartSwap(Action onFinished)
     {
         if (!IsUnlocked() || isFinishing || isSwapping || isRunningRecursiveSort)
         {

@@ -150,6 +150,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: Blue2x2Tray
       objectReference: {fileID: 0}
+    - target: {fileID: 6564385065304750771, guid: 487f855b7a9cb9d4ab19f80d69eb5376,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6564385065304750771, guid: 487f855b7a9cb9d4ab19f80d69eb5376,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6564385065304750771, guid: 487f855b7a9cb9d4ab19f80d69eb5376,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6564385065304750771, guid: 487f855b7a9cb9d4ab19f80d69eb5376,
+        type: 3}
+      propertyPath: m_Center.z
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7185132208987589301, guid: 487f855b7a9cb9d4ab19f80d69eb5376,
         type: 3}
       propertyPath: m_LocalPosition.x

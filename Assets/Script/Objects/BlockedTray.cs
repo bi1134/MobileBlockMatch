@@ -31,7 +31,7 @@ public class BlockedTray : Tray
             UpdateVisual();
 
             TrySpawnRemainingFood();
-            CheckAndStartRecursiveSwap(null);
+            CheckAndStartSwap(null);
         }
     }
 

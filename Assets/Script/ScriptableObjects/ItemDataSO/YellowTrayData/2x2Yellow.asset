@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 590dfec1796752f49a496474be8af18d, type: 3}
-  m_Name: 1x1 Yellow
+  m_Name: 2x2Yellow
   m_EditorClassIdentifier: 
-  <Name>k__BackingField: 1x1 Yellow
-  <ID>k__BackingField: 12
-  <Size>k__BackingField: {x: 1, y: 1}
+  <Name>k__BackingField: 2x2Yellow
+  <ID>k__BackingField: 11
+  <Size>k__BackingField: {x: 2, y: 2}
   <ExcludedOffsets>k__BackingField: []
   <trayColor>k__BackingField: 3

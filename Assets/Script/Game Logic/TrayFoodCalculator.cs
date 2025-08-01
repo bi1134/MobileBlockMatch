@@ -12,40 +12,43 @@ public static class TrayFoodCalculator
 {
     public static TraySpawnPlan CreateFoodPlan(List<TrayPlacementData> trayDataList)
     {
-        var plan = new TraySpawnPlan();
+        const int maxRetries = 10;
 
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            var plan = TryCreatePlanOnce(trayDataList);
+            if (plan != null)
+            {
+                Debug.Log($"Plan succeeded on attempt {attempt}");
+                return plan;
+            }
+        }
+
+        Debug.LogError("Failed to generate a valid tray food plan after retries.");
+        return null;
+    }
+
+    private static TraySpawnPlan TryCreatePlanOnce(List<TrayPlacementData> trayDataList)
+    {
+        var plan = new TraySpawnPlan();
         var trayCapacities = new Dictionary<TrayPlacementData, int>();
         var totalColorCounts = new Dictionary<ItemColorType, int>();
 
-        // Step 1: Calculate individual tray capacities and total color demand
         foreach (var data in trayDataList)
         {
-            if (data.trayPrefab == null) continue;
-            if (!data.trayPrefab.TryGetComponent(out Tray tray)) continue;
-
-            var shape = tray.GetShapeData();
-            int cap = CountValidSpawnPoints(shape);
+            if (!data.trayPrefab || !data.trayPrefab.TryGetComponent(out Tray tray)) continue;
+            int cap = CountValidSpawnPoints(tray.GetShapeData());
             trayCapacities[data] = cap;
 
-            var color = shape.trayColor;
-            if (!totalColorCounts.ContainsKey(color))
-                totalColorCounts[color] = 0;
-
-            totalColorCounts[color] += cap;
+            var color = tray.GetShapeData().trayColor;
+            totalColorCounts[color] = totalColorCounts.GetValueOrDefault(color) + cap;
         }
 
-        // Step 2: Build full food pool
-        List<ItemColorType> foodPool = new();
-        foreach (var kvp in totalColorCounts)
-        {
-            for (int i = 0; i < kvp.Value; i++)
-                foodPool.Add(kvp.Key);
-        }
+        List<ItemColorType> foodPool = totalColorCounts
+            .SelectMany(kvp => Enumerable.Repeat(kvp.Key, kvp.Value))
+            .OrderBy(_ => Random.value)
+            .ToList();
 
-        // Step 3: Shuffle once
-        foodPool = foodPool.OrderBy(_ => Random.value).ToList();
-
-        // Step 4: Fill trays from shuffled pool
         var usedCount = new Dictionary<ItemColorType, int>();
 
         foreach (var data in trayDataList)
@@ -59,69 +62,33 @@ public static class TrayFoodCalculator
             var foodList = new List<ItemColorType>();
             var uniqueColors = new HashSet<ItemColorType>();
 
+            int maxMatches = Mathf.FloorToInt(cap * 0.75f);
             int safety = 0;
-            const int maxSafety = 500;
 
-            int maxMatches = Mathf.FloorToInt(cap * 0.75f); // Enforce no more than 3 matching colors
-
-            // Fallback fill
-            while (foodList.Count < cap && foodPool.Count > 0)
+            while (foodList.Count < cap && safety++ < 500)
             {
-                int currentMatchCount = foodList.Count(f => f == trayColor);
-
-                // Try to find a fallback that doesn't break the 3-match rule
-                int fallbackIndex = foodPool.FindIndex(c => !(c == trayColor && currentMatchCount >= maxMatches));
-
-                if (fallbackIndex == -1)
-                {
-                    Debug.LogWarning($"Could not find suitable fallback for tray {trayColor} (pos: {data.position})");
-                    break; // No valid fallback left
-                }
-
-                var fallback = foodPool[fallbackIndex];
-                foodPool.RemoveAt(fallbackIndex);
-                foodList.Add(fallback);
-                usedCount[fallback] = usedCount.GetValueOrDefault(fallback) + 1;
-            }
-
-            while (foodList.Count < cap && safety++ < maxSafety)
-            {
-                int currentMatchCount = foodList.Count(f => f == trayColor);
+                int matchCount = foodList.Count(f => f == trayColor);
 
                 var candidates = foodPool
                     .Where(c =>
                         usedCount.GetValueOrDefault(c) < totalColorCounts[c] &&
                         (uniqueColors.Contains(c) || uniqueColors.Count < 3) &&
-                        !(c == trayColor && currentMatchCount >= maxMatches)
-                    ).ToList();
+                        !(c == trayColor && matchCount >= maxMatches))
+                    .ToList();
 
-                if (candidates.Count == 0) break;
+                if (candidates.Count == 0)
+                    return null; //unable to fulfill this tray — let caller retry
 
                 var chosen = candidates[Random.Range(0, candidates.Count)];
                 foodList.Add(chosen);
 
                 usedCount[chosen] = usedCount.GetValueOrDefault(chosen) + 1;
                 uniqueColors.Add(chosen);
-
-                // Remove first instance of chosen from pool
-                int idx = foodPool.FindIndex(c => c == chosen);
-                if (idx >= 0)
-                    foodPool.RemoveAt(idx);
+                foodPool.Remove(chosen); // removes one instance
             }
-
-           
 
             plan.NormalTrayFoodByData[data] = foodList;
         }
-
-        // Optional debug logs
-        Debug.Log("<color=cyan>--- Food Pool Plan ---</color>");
-        foreach (var kvp in totalColorCounts)
-            Debug.Log($"Need {kvp.Value} of {kvp.Key}");
-
-        Debug.Log("<color=yellow>--- Food Used ---</color>");
-        foreach (var kvp in usedCount)
-            Debug.Log($"Used {kvp.Value} of {kvp.Key}");
 
         return plan;
     }

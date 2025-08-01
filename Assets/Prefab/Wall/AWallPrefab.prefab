@@ -10,7 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4782629455357407172}
   - component: {fileID: 7390306204359321273}
-  m_Layer: 0
+  - component: {fileID: 2680805986098929046}
+  m_Layer: 7
   m_Name: AWallPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -48,6 +49,27 @@ MonoBehaviour:
   size: {x: 1, y: 1}
   currentGridPos: {x: 0, y: 0, z: 0}
   visual: {fileID: 2496601167948192075}
+--- !u!65 &2680805986098929046
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1792876807972813046}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0.5, y: 0.5, z: 0.5}
 --- !u!1 &3449845849109910234
 GameObject:
   m_ObjectHideFlags: 0
@@ -59,7 +81,7 @@ GameObject:
   - component: {fileID: 75364265271542989}
   - component: {fileID: 5264097429115028673}
   - component: {fileID: 8169158665509433036}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: model_Board_Outside_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -143,7 +165,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2496601167948192075}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: VisualPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}

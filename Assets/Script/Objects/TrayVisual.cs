@@ -7,7 +7,7 @@ public class TrayVisual : MonoBehaviour
     [SerializeField] public Vector3 originalLocalOffset = new Vector3(0.5f, 0f, 0.5f);
     [SerializeField] private Transform trayVisual;
     private Vector3 startUpOffset => originalLocalOffset + pickUpOffset; // Offset for the initial position of the tray
-    private Vector3 pickUpOffset = new Vector3(0f, 0.5f, 0f);
+    private Vector3 pickUpOffset = new Vector3(0f, 0.3f, 0f);
     private Tween moveTween;
     public bool IsDropFinished { get; private set; } = false;
     public bool IsDestroyFinished { get; private set; } = false;

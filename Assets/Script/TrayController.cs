@@ -2,23 +2,25 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class TrayController : MonoBehaviour
 {
     [SerializeField] private InputManager inputManager;
     [SerializeField] private LayerMask trayLayer;
-    [SerializeField] private float dragThreshold = 0.5f;
+    [SerializeField] private LayerMask trayCollision;
     [SerializeField, Range(0f, 0.5f)]
     private float trayCollisionMargin = 0.15f;
 
+    [SerializeField] private float trayCollisionDirection = 0.15f;
+
+    [SerializeField] private float moveSpeed = 20f;
     public static TrayController Instance { get; private set; }
 
     private readonly Queue<Tray> removeQueue = new();
     private bool isProcessingRemove = false;
     private readonly HashSet<Tray> activeRecursiveTrays = new();
-    private readonly HashSet<Tray> sharedVisited = new();
 
-    public bool IsTraySwaping => sharedVisited.Count > 0;
     public bool IsInputBlocked => activeRecursiveTrays.Count > 0;
 
     public int track;
@@ -29,13 +31,18 @@ public class TrayController : MonoBehaviour
     public float moveCheckCooldown = 0.1f;
     public float lastMoveCheckTime = 0f;
 
+    private Vector3 lastBoxCastOrigin;
+    private Vector3 lastBoxCastHalfExtents;
+    private Vector3 lastBoxCastDirection;
+    private float lastBoxCastDistance;
+
     [SerializeField] public static HashSet<Food> SwappingFoods = new();
 
     private void Awake() => Instance = this;
 
     private void Update()
     {
-        track = sharedVisited.Count;
+        track = activeRecursiveTrays.Count;
         if (IsInputBlocked || GameManager.Instance.IsGameEnd()) return;
 
         if (inputManager.WasTouchPressedThisFrame())
@@ -61,7 +68,7 @@ public class TrayController : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, trayLayer))
         {
             Tray tray = hit.collider.GetComponent<Tray>();
-            if (tray != null)
+            if (tray != null && tray.IsUnlocked())
             {
                 selectedTray = tray;
                 selectedTray.OnPickUp();
@@ -73,7 +80,8 @@ public class TrayController : MonoBehaviour
 
     private void HandleTrayDrag()
     {
-        if (!isDragging) isDragging = true;
+        if (!isDragging)
+            isDragging = true;
 
         Vector3 mouseWorldPos = inputManager.GetSelectedMapPosition();
         Vector3 desired = mouseWorldPos - dragOffset;
@@ -85,27 +93,40 @@ public class TrayController : MonoBehaviour
         if (moveDelta == Vector3.zero)
             return;
 
-        // Check X and Z separately
-        bool blockX = IsDirectionBlocked(selectedTray, new Vector3(Mathf.Sign(moveDelta.x), 0, 0));
-        bool blockZ = IsDirectionBlocked(selectedTray, new Vector3(0, 0, Mathf.Sign(moveDelta.z)));
+        Vector3 moveDir = moveDelta.normalized;
+        float moveDist = moveDelta.magnitude;
+        Vector3 step = moveDir * Mathf.Min(moveDist, moveSpeed * Time.deltaTime);
 
-        // Prioritize free axis
-        if (blockX && !blockZ)
-            desired.x = current.x; // Lock X, move Z
-        else if (!blockX && blockZ)
-            desired.z = current.z; // Lock Z, move X
-        else if (blockX && blockZ)
-            desired = current; // Both blocked, stop
-                               // else: both free, move as-is (or prioritize dominant axis if you prefer)
+        // Directional checks
+        bool blockX = IsDirectionBlocked(selectedTray, new Vector3(Mathf.Sign(moveDelta.x), 0, 0), step.magnitude);
+        bool blockZ = IsDirectionBlocked(selectedTray, new Vector3(0, 0, Mathf.Sign(moveDelta.z)), step.magnitude);
+        bool blockDiagonal = IsDirectionBlocked(selectedTray, new Vector3(Mathf.Sign(moveDelta.x), 0, Mathf.Sign(moveDelta.z)), step.magnitude);
 
-        // Move gently toward resolved target
-        Vector3 moveDir = desired - current;
-        float moveSpeed = 15f;
-        float moveDist = moveDir.magnitude;
+        if (blockDiagonal)
+        {
+            if (!blockX && blockZ)
+                desired.z = current.z;
+            else if (blockX && !blockZ)
+                desired.x = current.x;
+            else
+                desired = current;
+        }
+        else
+        {
+            if (blockX && !blockZ)
+                desired.x = current.x;
+            else if (!blockX && blockZ)
+                desired.z = current.z;
+            else if (blockX && blockZ)
+                desired = current;
+        }
+
+        moveDir = desired - current;
+        moveDist = moveDir.magnitude;
 
         if (moveDist > 0.01f)
         {
-            Vector3 step = moveDir.normalized * Mathf.Min(moveDist, moveSpeed * Time.deltaTime);
+            step = moveDir.normalized * Mathf.Min(moveDist, moveSpeed * Time.deltaTime);
             Vector3 newPos = current + step;
 
             selectedTray.transform.position = newPos;
@@ -113,19 +134,71 @@ public class TrayController : MonoBehaviour
         }
     }
 
-    private bool IsDirectionBlocked(Tray tray, Vector3 direction)
+    private bool IsDirectionBlocked(Tray tray, Vector3 direction, float moveStepDistance)
     {
-        Vector3 basePos = tray.transform.position + tray.GetVisualOffSet(); 
-        Vector2 size = tray.GetShapeData().Size;
+        if (direction == Vector3.zero)
+            return false;
 
-        float extent = (Mathf.Abs(direction.x) > 0) ? size.x * 0.25f : size.y * 0.25f;
-        extent += 0.05f;
+        var shape = tray.GetShapeData();
+        var excludedOffsets = shape.ExcludedOffsets;
+        Vector2Int size = shape.Size;
 
-        Vector3 checkPos = basePos + direction * extent;
-        Vector3Int cell = PlacementSystem.Instance.grid.WorldToCell(checkPos);
+        Vector3 basePos = tray.transform.position;
+        float castHeight = 0.25f;
 
-        if (!tray.CanMoveTo(cell)) return true;
-        if (IsOverlappingOtherTrays(tray, checkPos)) return true;
+        // Scale cast distance to match movement magnitude
+        float checkDistance = Mathf.Max(trayCollisionDirection, moveStepDistance);
+
+        Vector3 dir = direction.normalized;
+
+        for (int x = 0; x < size.x; x++)
+        {
+            for (int y = 0; y < size.y; y++)
+            {
+                Vector2Int offset = new(x, y);
+                if (excludedOffsets.Contains(offset))
+                    continue;
+
+                Vector3 cellCenter = basePos + new Vector3(x + 0.5f, castHeight, y + 0.5f);
+                Vector3 castOrigin = cellCenter + dir * trayCollisionMargin * 0.5f;
+
+                Vector3 halfExtents = new Vector3(
+                    0.5f - trayCollisionMargin * 0.5f,
+                    castHeight,
+                    0.5f - trayCollisionMargin * 0.5f
+                );
+
+                RaycastHit[] hits = Physics.BoxCastAll(
+                    castOrigin,
+                    halfExtents,
+                    dir,
+                    Quaternion.identity,
+                    checkDistance,
+                    trayCollision
+                );
+
+                foreach (var hit in hits)
+                {
+                    Tray hitTray = hit.collider.GetComponentInParent<Tray>();
+                    if (hitTray == tray) continue;
+
+                    if (hitTray != null)
+                    {
+                        Vector3 local = hit.point - hitTray.transform.position;
+                        int hitX = Mathf.FloorToInt(local.x);
+                        int hitZ = Mathf.FloorToInt(local.z);
+                        Vector2Int hitOffset = new(hitX, hitZ);
+
+                        if (!hitTray.GetShapeData().ExcludedOffsets.Contains(hitOffset))
+                            return true;
+                    }
+                    else
+                    {
+                        return true; // Hit wall or environment
+                    }
+                }
+            }
+        }
 
         return false;
     }
@@ -141,29 +214,6 @@ public class TrayController : MonoBehaviour
                 desired.x = current.x; // lock X
         }
         return desired;
-    }
-
-    private bool IsOverlappingOtherTrays(Tray movingTray, Vector3 testPosition)
-    {
-        Bounds bounds = GetTrayBoundsAt(movingTray, testPosition, trayCollisionMargin);
-
-        foreach (Tray other in PlacementSystem.Instance.AllPlannedTrays)
-        {
-            if (other == movingTray) continue;
-            Vector3 otherCenter = other.transform.position + other.GetVisualOffSet();
-            Bounds otherBounds = GetTrayBoundsAt(other, otherCenter, trayCollisionMargin);
-            if (bounds.Intersects(otherBounds))
-                return true;
-        }
-
-        return false;
-    }
-
-    private Bounds GetTrayBoundsAt(Tray tray, Vector3 basePosition, float margin)
-    {
-        Vector3 center = basePosition + tray.GetVisualOffSet() + new Vector3(0f, 0.2f, 0f);
-        Vector3 size = new Vector3(tray.GetShapeData().Size.x, 0.4f, tray.GetShapeData().Size.y) * (1f - margin);
-        return new Bounds(center, size);
     }
 
     private void ReleaseTray()
@@ -185,8 +235,8 @@ public class TrayController : MonoBehaviour
         yield return null;
         if (a != null) a.CheckIfCompleted();
         if (b != null) b.CheckIfCompleted();
-        if (a != null) yield return a.CheckAndStartRecursiveSwap(null);
-        if (b != null) yield return b.CheckAndStartRecursiveSwap(null);
+        if (a != null) yield return a.CheckAndStartSwap(null);
+        if (b != null) yield return b.CheckAndStartSwap(null);
         callback?.Invoke();
     }
 
@@ -217,53 +267,10 @@ public class TrayController : MonoBehaviour
             var tray = removeQueue.Dequeue();
             activeRecursiveTrays.Remove(tray);
             lastMoveCheckTime = Time.time;
-            yield return new WaitForSeconds(0.1f);
+            yield return Helpers.GetWaitForSecond(0.1f);
         }
+
         isProcessingRemove = false;
-    }
-
-    public HashSet<Tray> GetSharedVisitedSet()
-    {
-        sharedVisited.Clear();
-        return sharedVisited;
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (!Application.isPlaying || PlacementSystem.Instance == null) return;
-
-        foreach (Tray tray in PlacementSystem.Instance.AllPlannedTrays)
-        {
-            Vector3 trayWorldPos = tray.transform.position;
-            Vector3 offsetPos = trayWorldPos + tray.GetVisualOffSet();
-            Vector2 size = tray.GetShapeData().Size;
-
-            // Draw bounds in cyan
-            Gizmos.color = (tray == selectedTray) ? Color.cyan : new Color(0, 1, 1, 0.25f); // brighter if selected
-            Bounds bounds = GetTrayBoundsAt(tray, trayWorldPos, trayCollisionMargin);
-            Gizmos.DrawWireCube(bounds.center, bounds.size);
-
-            // Draw check positions (red spheres + yellow checked grid)
-            Vector3[] directions = { Vector3.right, Vector3.left, Vector3.forward, Vector3.back };
-
-            foreach (Vector3 dir in directions)
-            {
-                float extent = (Mathf.Abs(dir.x) > 0) ? size.x * 0.5f : size.y * 0.5f;
-                extent += 0.05f;
-
-                Vector3 checkPos = offsetPos + dir * extent;
-
-                // Draw red sphere at check position
-                Gizmos.color = Color.red;
-                Gizmos.DrawSphere(checkPos + Vector3.up * 0.1f, 0.075f);
-
-                // Draw the grid cell being checked (yellow)
-                Vector3Int cell = PlacementSystem.Instance.grid.WorldToCell(checkPos);
-                Vector3 cellWorld = PlacementSystem.Instance.grid.CellToWorld(cell) + new Vector3(0.5f, 0f, 0.5f);
-                Gizmos.color = new Color(1f, 1f, 0f, 0.2f);
-                Gizmos.DrawCube(cellWorld + Vector3.up * 0.05f, new Vector3(1f, 0.05f, 1f));
-            }
-        }
     }
 
 }

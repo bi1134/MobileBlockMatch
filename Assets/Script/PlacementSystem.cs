@@ -100,6 +100,7 @@ public class PlacementSystem : MonoBehaviour
         return objAtCell == requestingObj;
     }
 
+
     public GridObjects GetGridObjectAt(Vector3Int cell)
     {
         occupiedCells.TryGetValue(cell, out var obj);

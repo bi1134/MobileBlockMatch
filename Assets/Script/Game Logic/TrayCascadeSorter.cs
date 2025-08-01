@@ -10,7 +10,25 @@ public static class TrayCascadeSorter
 
     public static IEnumerator StartBreadthFirstSort(Tray startTray, Action onComplete)
     {
-        var visited = TrayController.Instance.GetSharedVisitedSet(); // auto-clears
+        var visited = new HashSet<Tray>();
+
+        var initialNeighbors = startTray.GetAdjacentTrays()
+        .Where(t =>
+            !visited.Contains(t) &&
+            t.IsUnlocked() &&
+            !t.isSwapping &&
+            !t.isFinishing &&
+            t.gameObject.activeInHierarchy)
+        .OrderByDescending(t => startTray.GetPriorityScore(t))
+        .ToList();
+
+        if (initialNeighbors.Count == 0)
+        {
+            onComplete?.Invoke();
+            yield break;
+        }
+
+        TrayController.Instance.NotifyTrayRecursiveStarted(startTray);
         visited.Add(startTray);
 
         var currentLayer = new List<Tray> { startTray };
@@ -40,6 +58,7 @@ public static class TrayCascadeSorter
                     swapTasks.Add(task);
 
                     nextLayer.Add(neighbor);
+                    TrayController.Instance.NotifyTrayRecursiveStarted(neighbor);
                 }
             }
 
@@ -49,6 +68,11 @@ public static class TrayCascadeSorter
             yield return WaitUntilSwapsComplete();
 
             currentLayer = nextLayer;
+        }
+
+        foreach (var tray in visited)
+        {
+            TrayController.Instance.NotifyTrayRecursiveEnded(tray);
         }
 
         onComplete?.Invoke();
