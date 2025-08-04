@@ -35,6 +35,7 @@ public class TrayController : MonoBehaviour
     private Vector3 lastBoxCastHalfExtents;
     private Vector3 lastBoxCastDirection;
     private float lastBoxCastDistance;
+    private RaycastHit[] trayCastHits = new RaycastHit[10];
 
     [SerializeField] public static HashSet<Food> SwappingFoods = new();
 
@@ -104,10 +105,12 @@ public class TrayController : MonoBehaviour
 
         if (blockDiagonal)
         {
-            if (!blockX && blockZ)
+            if (Mathf.Abs(moveDelta.x) > Mathf.Abs(moveDelta.z) && !blockX)
+                desired.z = current.z; // favor X
+            else if (!blockZ)
+                desired.x = current.x; // favor Z
+            else if (!blockX)
                 desired.z = current.z;
-            else if (blockX && !blockZ)
-                desired.x = current.x;
             else
                 desired = current;
         }
@@ -168,26 +171,30 @@ public class TrayController : MonoBehaviour
                     0.5f - trayCollisionMargin * 0.5f
                 );
 
-                RaycastHit[] hits = Physics.BoxCastAll(
+                int hitCount = Physics.BoxCastNonAlloc(
                     castOrigin,
                     halfExtents,
                     dir,
+                    trayCastHits,
                     Quaternion.identity,
                     checkDistance,
                     trayCollision
                 );
 
-                foreach (var hit in hits)
+                for (int i = 0; i < hitCount; i++)
                 {
+                    RaycastHit hit = trayCastHits[i];
                     Tray hitTray = hit.collider.GetComponentInParent<Tray>();
                     if (hitTray == tray) continue;
 
                     if (hitTray != null)
                     {
-                        Vector3 local = hit.point - hitTray.transform.position;
+                        Vector3 local = hit.point + hitTray.GetVisualOffSet();
                         int hitX = Mathf.FloorToInt(local.x);
                         int hitZ = Mathf.FloorToInt(local.z);
                         Vector2Int hitOffset = new(hitX, hitZ);
+                        Vector3 hitOffsets = new(hitX, 0.25f ,hitZ);
+                        Debug.DrawLine(castOrigin, hitOffsets, Color.red, checkDistance);
 
                         if (!hitTray.GetShapeData().ExcludedOffsets.Contains(hitOffset))
                             return true;

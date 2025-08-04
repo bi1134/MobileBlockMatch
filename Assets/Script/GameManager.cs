@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
 using UnityEngine;
 
@@ -30,7 +29,12 @@ public class GameManager : MonoBehaviour
 
     public int FinishedTrayCount => finishedTrayCount;
 
-    public GameState CurrentState { get; private set; }
+    [field: SerializeField]public GameState CurrentState { get; private set; }
+    private float winLoseCheckDelay = 0.5f;
+    [SerializeField] private float winLoseCheckTimer = 0f;
+    [SerializeField]private bool shouldCheckWinLose = false;
+
+    private readonly List<DirectionalTray> reusableRemainingTrays = new();
 
     private void Awake()
     {
@@ -49,6 +53,13 @@ public class GameManager : MonoBehaviour
                     SetGameState(GameState.Starting);
                 }
                 break;
+            case GameState.Starting:
+                //just do this (change to button press to change later)
+                    SetGameState(GameState.Playing);
+                break;
+            case GameState.Playing:
+                HandleWinLoseCheckDelay();
+                break;
         }
     }
 
@@ -58,25 +69,47 @@ public class GameManager : MonoBehaviour
         OnTrayFinished?.Invoke(this, EventArgs.Empty);
         print(totalTrayCount);
         // Check if win or lose
-        StartCoroutine(CheckWinLoseCondition());
+        shouldCheckWinLose = true;
+        winLoseCheckTimer = winLoseCheckDelay;
     }
 
-    private IEnumerator CheckWinLoseCondition()
+    private void HandleWinLoseCheckDelay()
     {
-        yield return new WaitForSeconds(1.5f); // Wait until everything else finishes
+        if (TrayController.Instance.track > 0)
+        {
+            shouldCheckWinLose = true;
+            winLoseCheckTimer = winLoseCheckDelay;
+            print("asdfasd");
+            return;
+        }
 
+        if (shouldCheckWinLose)
+        {
+            winLoseCheckTimer -= Time.deltaTime;
+
+            if (winLoseCheckTimer <= 0f)
+            {
+                winLoseCheckTimer = 0;
+                shouldCheckWinLose = false;
+                CheckWinLoseCondition();
+            }
+        }
+    }
+
+    private void CheckWinLoseCondition()
+    {
         if (totalTrayCount <= 0)
         {
             Debug.Log("All trays finished! WIN");
             SetGameState(GameState.Win);
-            yield break;
+            return;
         }
 
         if (currentMoveCount <= 0)
         {
             Debug.Log("Out of moves! LOSE");
             SetGameState(GameState.GameOver);
-            yield break;
+            return;
         }
 
         CheckLoseCondition(PlacementSystem.Instance.AllPlannedTrays);
@@ -84,20 +117,23 @@ public class GameManager : MonoBehaviour
 
     public void CheckLoseCondition(List<Tray> allTrays)
     {
-        var remaining = allTrays
-            .Where(t => t != null && t.IsUnlocked())
-            .OfType<DirectionalTray>()
-            .ToList();
+        reusableRemainingTrays.Clear();
 
-        if (remaining.Count < 2) return;
+        foreach (var tray in allTrays)
+        {
+            if (tray is DirectionalTray directional && tray.IsUnlocked())
+                reusableRemainingTrays.Add(directional);
+        }
 
-        foreach (var tray in remaining)
+        if (reusableRemainingTrays.Count < 2) return;
+
+        foreach (var tray in reusableRemainingTrays)
         {
             var trayPos = tray.GetGridPosition();
             var trayColor = tray.GetShapeData().trayColor;
             var dir = tray.allowedDirection;
 
-            foreach (var other in remaining)
+            foreach (var other in reusableRemainingTrays)
             {
                 if (tray == other) continue;
                 if (other.GetShapeData().trayColor == trayColor) continue; 
@@ -146,7 +182,8 @@ public class GameManager : MonoBehaviour
             moveCount = currentMoveCount
         });
         TryTriggerAllSpawners();
-        StartCoroutine(CheckWinLoseCondition());
+        shouldCheckWinLose = true;
+        winLoseCheckTimer = winLoseCheckDelay;
         Debug.Log($"move Used: {currentMoveCount} / {maxMoveCount}");
         Debug.Log($"remaining trays: {totalTrayCount}");
     }

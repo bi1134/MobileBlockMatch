@@ -7,7 +7,7 @@ public class GamePlayProgressUI : MonoBehaviour
     [SerializeField] private Image moveCountImage;
     [SerializeField] private TextMeshProUGUI moveCount;
 
-    private void Start()
+    private void Awake()
     {
         GameManager.Instance.OnProgressChanged += OnProgressChanged;
     }
