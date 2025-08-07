@@ -59,7 +59,7 @@ public class Tray : GridObjects
         // Spawn food after visual is settled
         SpawnFromColorList(colors);
 
-        yield return new WaitForSeconds(0.2f);
+        yield return Helpers.GetWaitForSecond(0.2f);
 
         if (IsUnlocked()) 
         {
@@ -71,7 +71,7 @@ public class Tray : GridObjects
 
     private IEnumerator DestroyAfterVisual()
     {
-        yield return new WaitForSeconds(.5f);
+        yield return Helpers.GetWaitForSecond(.5f);
         gameObject.SetActive(false);
     }
 
@@ -89,7 +89,7 @@ public class Tray : GridObjects
     public void OnDrop()
     {
         if (!IsUnlocked() || IsBusy()) return;
-
+        TrayController.Instance.ForcePickupDelay();
         Vector3 worldPos = transform.position;
         Vector3 cellSize = placementSystem.grid.cellSize;
 
@@ -148,7 +148,6 @@ public class Tray : GridObjects
     {
         Tween dropTween = visual.PlayDropAnimationSnap(placementSystem.grid.CellToWorld(snapCell));
         yield return dropTween.WaitForCompletion();
-        TrayController.Instance.moveCheckCooldown = 0.1f;
 
         yield return CheckAndStartSwap(null);
     }
@@ -434,7 +433,6 @@ public class Tray : GridObjects
     private IEnumerator DelayedCompletionCheck()
     {
         yield return new WaitForEndOfFrame(); // ensure any perfor swap has completed
-        TrayController.Instance.lastMoveCheckTime = Time.time;
 
         if (isSwapping || isFinishing) yield break;
 
@@ -470,7 +468,6 @@ public class Tray : GridObjects
         if (me == null || other == null || me.isFinishing || other.isFinishing || fromMe == null || fromThem == null)
             return DOTween.Sequence();
 
-        TrayController.Instance.lastMoveCheckTime = Time.time;
         me.activeFoods.Remove(fromMe);
         other.activeFoods.Remove(fromThem);
 

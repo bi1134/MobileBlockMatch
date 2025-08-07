@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class TrayController : MonoBehaviour
 {
@@ -11,10 +10,14 @@ public class TrayController : MonoBehaviour
     [SerializeField] private LayerMask trayCollision;
     [SerializeField, Range(0f, 0.5f)]
     private float trayCollisionMargin = 0.15f;
-
     [SerializeField] private float trayCollisionDirection = 0.15f;
-
+    [SerializeField] private float trayDragCooldown = 0.5f; // tweak as needed
+    [SerializeField] private bool isTrayDragLocked = false;
     [SerializeField] private float moveSpeed = 20f;
+
+    public int track;
+    public float trayDragTimer = 0f;
+
     public static TrayController Instance { get; private set; }
 
     private readonly Queue<Tray> removeQueue = new();
@@ -23,19 +26,13 @@ public class TrayController : MonoBehaviour
 
     public bool IsInputBlocked => activeRecursiveTrays.Count > 0;
 
-    public int track;
-
-    private Tray selectedTray;
     public bool isDragging;
     private Vector3 dragOffset;
-    public float moveCheckCooldown = 0.1f;
-    public float lastMoveCheckTime = 0f;
-
-    private Vector3 lastBoxCastOrigin;
-    private Vector3 lastBoxCastHalfExtents;
-    private Vector3 lastBoxCastDirection;
-    private float lastBoxCastDistance;
     private RaycastHit[] trayCastHits = new RaycastHit[10];
+    private Tray selectedTray;
+    private bool isWaitingForTrayClear = false;
+    private float postDropBlockTime = 0.1f;
+    public float lastDropTime = -10f;
 
     [SerializeField] public static HashSet<Food> SwappingFoods = new();
 
@@ -44,7 +41,11 @@ public class TrayController : MonoBehaviour
     private void Update()
     {
         track = activeRecursiveTrays.Count;
-        if (IsInputBlocked || GameManager.Instance.IsGameEnd()) return;
+
+        DelayPickup();
+        
+        if (GameManager.Instance.IsGameEnd() || !GameManager.Instance.IsGamePlaying() || isTrayDragLocked) return;
+
 
         if (inputManager.WasTouchPressedThisFrame())
             TrySelectTray();
@@ -53,15 +54,52 @@ public class TrayController : MonoBehaviour
             HandleTrayDrag();
 
         if (inputManager.WasTouchReleasedThisFrame() && isDragging)
-            ReleaseTray();
+            EndDrag();
+    }
+
+    private void DelayPickup()
+    {
+        //if theres any in queue then locked = true and return
+        if (IsInputBlocked)
+        {
+            isTrayDragLocked = true;
+            trayDragTimer = trayDragCooldown;
+            isWaitingForTrayClear = false;
+            return;
+        }
+
+        if (isWaitingForTrayClear)
+        {
+            isWaitingForTrayClear = false; // only once
+            isTrayDragLocked = true;
+            trayDragTimer = trayDragCooldown;
+            return;
+        }
+
+        if (isTrayDragLocked)
+        {
+            trayDragTimer -= Time.deltaTime;
+
+            if (trayDragTimer <= 0f)
+            {
+                trayDragTimer = 0;
+                isTrayDragLocked = false;
+            }
+        }
+    }
+
+    public void ForcePickupDelay()
+    {
+        isTrayDragLocked = true;
+        trayDragTimer = 0.2f;
+        isWaitingForTrayClear = false;
+        lastDropTime = Time.time;
     }
 
     private void TrySelectTray()
     {
-        if (Time.time < lastMoveCheckTime + moveCheckCooldown)
+        if (isTrayDragLocked || Time.time < lastDropTime + postDropBlockTime)
             return;
-
-        lastMoveCheckTime = Time.time;
 
         Vector3 clickWorldPos = inputManager.GetSelectedMapPosition();
         Ray ray = new Ray(clickWorldPos + Vector3.up * 5f, Vector3.down);
@@ -71,12 +109,19 @@ public class TrayController : MonoBehaviour
             Tray tray = hit.collider.GetComponent<Tray>();
             if (tray != null && tray.IsUnlocked())
             {
-                selectedTray = tray;
-                selectedTray.OnPickUp();
-                selectedTray.visual.PlayPickUpAnimation();
-                dragOffset = clickWorldPos - selectedTray.transform.position;
+                BeginDrag(tray);
             }
         }
+    }
+
+    private void BeginDrag(Tray tray)
+    {
+        selectedTray = tray;
+        isDragging = true;
+        dragOffset = inputManager.GetSelectedMapPosition() - tray.transform.position;
+
+        tray.OnPickUp();
+        tray.visual.PlayPickUpAnimation();
     }
 
     private void HandleTrayDrag()
@@ -98,10 +143,7 @@ public class TrayController : MonoBehaviour
         float moveDist = moveDelta.magnitude;
         Vector3 step = moveDir * Mathf.Min(moveDist, moveSpeed * Time.deltaTime);
 
-        // Directional checks
-        bool blockX = IsDirectionBlocked(selectedTray, new Vector3(Mathf.Sign(moveDelta.x), 0, 0), step.magnitude);
-        bool blockZ = IsDirectionBlocked(selectedTray, new Vector3(0, 0, Mathf.Sign(moveDelta.z)), step.magnitude);
-        bool blockDiagonal = IsDirectionBlocked(selectedTray, new Vector3(Mathf.Sign(moveDelta.x), 0, Mathf.Sign(moveDelta.z)), step.magnitude);
+        DirectionalChecks(moveDelta, step.magnitude, out bool blockX, out bool blockZ, out bool blockDiagonal);
 
         if (blockDiagonal)
         {
@@ -135,6 +177,23 @@ public class TrayController : MonoBehaviour
             selectedTray.transform.position = newPos;
             selectedTray.currentGridPos = PlacementSystem.Instance.grid.WorldToCell(newPos);
         }
+    }
+
+    private void EndDrag()
+    {
+        if (selectedTray != null)
+        {
+            selectedTray.OnDrop();
+            selectedTray = null;
+        }
+        isDragging = false;
+    }
+
+    private void DirectionalChecks(Vector3 moveDelta, float stepMag, out bool blockX, out bool blockZ, out bool blockDiagonal)
+    {
+        blockX = IsDirectionBlocked(selectedTray, new Vector3(Mathf.Sign(moveDelta.x), 0, 0), stepMag);
+        blockZ = IsDirectionBlocked(selectedTray, new Vector3(0, 0, Mathf.Sign(moveDelta.z)), stepMag);
+        blockDiagonal = IsDirectionBlocked(selectedTray, new Vector3(Mathf.Sign(moveDelta.x), 0, Mathf.Sign(moveDelta.z)), stepMag);
     }
 
     private bool IsDirectionBlocked(Tray tray, Vector3 direction, float moveStepDistance)
@@ -215,7 +274,7 @@ public class TrayController : MonoBehaviour
         if (tray is DirectionalTray directional)
         {
             Vector3 current = tray.transform.position;
-            if (directional.allowedDirection == DirectionalTray.MovementAxis.Horizontal)
+            if (directional.allowedDirection == MovementAxis.Horizontal)
                 desired.z = current.z; // lock Z
             else
                 desired.x = current.x; // lock X
@@ -223,17 +282,8 @@ public class TrayController : MonoBehaviour
         return desired;
     }
 
-    private void ReleaseTray()
-    {
-        selectedTray.OnDrop();
-        lastMoveCheckTime = Time.time;
-        selectedTray = null;
-        isDragging = false;
-    }
-
     public void RunDeferredCompletion(Tray a, Tray b, Action callback)
     {
-        lastMoveCheckTime = Time.time;
         StartCoroutine(DeferredCompletionRoutine(a, b, callback));
     }
 
@@ -251,8 +301,8 @@ public class TrayController : MonoBehaviour
     {
         if (activeRecursiveTrays.Add(tray))
         {
-            lastMoveCheckTime = Time.time;
-            moveCheckCooldown = 0.5f;
+            isTrayDragLocked = true;
+            trayDragTimer = trayDragCooldown;
         }
     }
 
@@ -273,11 +323,17 @@ public class TrayController : MonoBehaviour
         {
             var tray = removeQueue.Dequeue();
             activeRecursiveTrays.Remove(tray);
-            lastMoveCheckTime = Time.time;
             yield return Helpers.GetWaitForSecond(0.1f);
         }
 
         isProcessingRemove = false;
+
+        if (activeRecursiveTrays.Count == 0)
+        {
+            isWaitingForTrayClear = true; // mark to start delay next frame
+            isTrayDragLocked = true;
+            trayDragTimer = trayDragCooldown;
+        }
     }
 
 }

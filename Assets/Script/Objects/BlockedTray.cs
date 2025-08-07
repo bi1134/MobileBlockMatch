@@ -20,6 +20,11 @@ public class BlockedTray : Tray
             GameManager.Instance.OnTrayFinished += TryUnlock;
     }
 
+    public void SetUnlockRequirement(int requirement)
+    {
+        requiredCompletedTrays = requirement;
+    }
+
     private void TryUnlock(object sender, EventArgs e)
     {
         if (unlocked) return;

@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float winLoseCheckTimer = 0f;
     [SerializeField]private bool shouldCheckWinLose = false;
 
-    private readonly List<DirectionalTray> reusableRemainingTrays = new();
+    private readonly List<DirectionalTray> activeDirectionalTrays = new();
 
     private void Awake()
     {
@@ -53,10 +53,6 @@ public class GameManager : MonoBehaviour
                     SetGameState(GameState.Starting);
                 }
                 break;
-            case GameState.Starting:
-                //just do this (change to button press to change later)
-                    SetGameState(GameState.Playing);
-                break;
             case GameState.Playing:
                 HandleWinLoseCheckDelay();
                 break;
@@ -68,6 +64,7 @@ public class GameManager : MonoBehaviour
         finishedTrayCount++;
         OnTrayFinished?.Invoke(this, EventArgs.Empty);
         print(totalTrayCount);
+        TryTriggerAllSpawners();
         // Check if win or lose
         shouldCheckWinLose = true;
         winLoseCheckTimer = winLoseCheckDelay;
@@ -79,7 +76,6 @@ public class GameManager : MonoBehaviour
         {
             shouldCheckWinLose = true;
             winLoseCheckTimer = winLoseCheckDelay;
-            print("asdfasd");
             return;
         }
 
@@ -115,49 +111,49 @@ public class GameManager : MonoBehaviour
         CheckLoseCondition(PlacementSystem.Instance.AllPlannedTrays);
     }
 
-    public void CheckLoseCondition(List<Tray> allTrays)
+    public void CheckLoseCondition(List<Tray> currentActiveTrays)
     {
-        reusableRemainingTrays.Clear();
+        activeDirectionalTrays.Clear();
 
-        foreach (var tray in allTrays)
+        foreach (var tray in currentActiveTrays)
         {
-            if (tray is DirectionalTray directional && tray.IsUnlocked())
-                reusableRemainingTrays.Add(directional);
+            if (tray is DirectionalTray dir && dir.IsUnlocked())
+                activeDirectionalTrays.Add(dir);
         }
 
-        if (reusableRemainingTrays.Count < 2) return;
+        if (currentActiveTrays.Count > activeDirectionalTrays.Count)
+            return;
 
-        foreach (var tray in reusableRemainingTrays)
+        foreach (var tray in activeDirectionalTrays)
         {
-            var trayPos = tray.GetGridPosition();
             var trayColor = tray.GetShapeData().trayColor;
-            var dir = tray.allowedDirection;
+            var trayAxis = tray.allowedDirection;
+            var trayInner = tray.GetInnerRayCells();
+            var trayOuter = tray.GetOuterRayCells();
 
-            foreach (var other in reusableRemainingTrays)
+            foreach (var other in activeDirectionalTrays)
             {
                 if (tray == other) continue;
-                if (other.GetShapeData().trayColor == trayColor) continue; 
+                if (!other.IsUnlocked()) continue;
 
-                var otherPos = other.GetGridPosition();
+                var otherColor = other.GetShapeData().trayColor;
+                if (trayColor == otherColor) continue;
 
-                bool aligned = dir switch
+                var otherOccupied = other.GetOccupiedCells(other.GetGridPosition());
+
+                if (trayAxis == other.allowedDirection)
                 {
-                    DirectionalTray.MovementAxis.Horizontal => trayPos.z == otherPos.z,
-                    DirectionalTray.MovementAxis.Vertical => trayPos.x == otherPos.x,
-                    _ => false
-                };
-
-                bool near = dir switch
+                    if (trayOuter.Overlaps(otherOccupied))
+                        return;
+                }
+                else
                 {
-                    DirectionalTray.MovementAxis.Horizontal =>
-                        Mathf.Abs(trayPos.z - otherPos.z) <= 1 && Mathf.Abs(trayPos.x - otherPos.x) <= 5,
-                    DirectionalTray.MovementAxis.Vertical =>
-                        Mathf.Abs(trayPos.x - otherPos.x) <= 1 && Mathf.Abs(trayPos.z - otherPos.z) <= 5,
-                    _ => false
-                };
+                    if (trayInner.Overlaps(otherOccupied))
+                        return;
 
-                if (aligned || near)
-                    return; 
+                    if (trayInner.Overlaps(other.GetInnerRayCells()))
+                        return;
+                }
             }
         }
 
@@ -221,6 +217,11 @@ public class GameManager : MonoBehaviour
         });
         finishedTrayCount = 0;
         BlockedTrayFoodMap.Clear();
+    }
+
+    public bool IsGamePlaying()
+    {
+        return CurrentState == GameState.Playing;
     }
 
     public bool IsGameEnd()

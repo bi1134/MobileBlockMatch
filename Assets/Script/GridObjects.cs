@@ -17,7 +17,7 @@ public class GridObjects : MonoBehaviour
         RegisterSelf();
     }
 
-    protected List<Vector3Int> GetOccupiedCells(Vector3Int origin)
+    public List<Vector3Int> GetOccupiedCells(Vector3Int origin)
     {
         List<Vector3Int> occupied = new();
 

@@ -312,6 +312,7 @@ public class PlacementSystem : MonoBehaviour
     #region Food and Tray Spawning
     private void SpawnTrays(Dictionary<TrayPlacementData, List<ItemColorType>> foodMap)
     {
+        //normal trays
         foreach (var trayData in currentMap.Trays)
         {
             GameObject trayGO = Instantiate(trayData.trayPrefab, grid.CellToWorld(trayData.position), Quaternion.identity, gridParent);
@@ -332,6 +333,57 @@ public class PlacementSystem : MonoBehaviour
                 }
             }
         }
+
+        // Directional Trays
+        foreach (var dirTray in currentMap.DirectionalTrays)
+        {
+            GameObject trayGO = Instantiate(dirTray.trayPrefab, grid.CellToWorld(dirTray.position), Quaternion.identity, gridParent);
+            if (trayGO.TryGetComponent(out DirectionalTray tray))
+            {
+                tray.SetAxis(dirTray.movementAxis);
+                tray.ApplyFoodSet(currentMap.ActiveFoodTheme);
+                tray.OnTrayFinished += GameManager.Instance.HandleTrayFinished;
+                activeTrays.Add(tray);
+
+                Vector3Int gridPos = grid.WorldToCell(trayGO.transform.position);
+                tray.currentGridPos = gridPos;
+                tray.originalGridPos = gridPos;
+                tray.lastValidGridPos = gridPos;
+
+                var key = dirTray.ToPlacementData();
+
+                if (foodMap.TryGetValue(key, out var foodList))
+                {
+                    tray.DelayedSpawnFromColorList(foodList);
+                }
+            }
+        }
+
+        // Blocked Trays
+        foreach (var blockedTray in currentMap.BlockedTrays)
+        {
+            GameObject trayGO = Instantiate(blockedTray.trayPrefab, grid.CellToWorld(blockedTray.position), Quaternion.identity, gridParent);
+
+            if (trayGO.TryGetComponent(out BlockedTray tray))
+            {
+                tray.SetUnlockRequirement(blockedTray.requiredCompletedTrays);
+                tray.ApplyFoodSet(currentMap.ActiveFoodTheme);
+                tray.OnTrayFinished += GameManager.Instance.HandleTrayFinished;
+                activeTrays.Add(tray);
+
+                Vector3Int gridPos = grid.WorldToCell(trayGO.transform.position);
+                tray.currentGridPos = gridPos;
+                tray.originalGridPos = gridPos;
+                tray.lastValidGridPos = gridPos;
+
+                var key = blockedTray.ToPlacementData();
+
+                if (foodMap.TryGetValue(key, out var foodList))
+                {
+                    GameManager.Instance.BlockedTrayFoodMap[tray] = foodList;
+                }
+            }
+        }
     }
 
     private void CollectPlannedTrayData()
@@ -339,7 +391,7 @@ public class PlacementSystem : MonoBehaviour
         plannedTrayData.Clear();
         int trayCounter = 0;
 
-        // Static trays
+        // Normal Trays
         foreach (var tray in currentMap.Trays)
         {
             var data = tray;
@@ -347,7 +399,37 @@ public class PlacementSystem : MonoBehaviour
             plannedTrayData.Add(data);
         }
 
-        // Spawner trays
+        // Directional Trays
+        for (int i = 0; i < currentMap.DirectionalTrays.Count; i++)
+        {
+            var dirTray = currentMap.DirectionalTrays[i];
+            dirTray.uniqueID = trayCounter++;
+            currentMap.DirectionalTrays[i] = dirTray; // update in case it's reused
+
+            plannedTrayData.Add(new TrayPlacementData
+            {
+                trayPrefab = dirTray.trayPrefab,
+                position = dirTray.position,
+                uniqueID = dirTray.uniqueID
+            });
+        }
+
+        // Blocked Trays
+        for (int i = 0; i < currentMap.BlockedTrays.Count; i++)
+        {
+            var blockedTray = currentMap.BlockedTrays[i];
+            blockedTray.uniqueID = trayCounter++;
+            currentMap.BlockedTrays[i] = blockedTray;
+
+            plannedTrayData.Add(new TrayPlacementData
+            {
+                trayPrefab = blockedTray.trayPrefab,
+                position = blockedTray.position,
+                uniqueID = blockedTray.uniqueID
+            });
+        }
+
+        // Spawner Trays
         foreach (var spawnerData in currentMap.Spawners)
         {
             foreach (var tray in spawnerData.TraysToSpawn)
@@ -358,6 +440,7 @@ public class PlacementSystem : MonoBehaviour
             }
         }
     }
+
 
     public bool CanSpawnTrayAt(Vector3Int spawnerPos, Vector2Int traySize, SpawningDirection direction)
     {

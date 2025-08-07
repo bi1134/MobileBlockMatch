@@ -49,6 +49,8 @@ MonoBehaviour:
       type: 3}
     position: {x: 1, y: 0, z: -3}
     uniqueID: 7
+  <DirectionalTrays>k__BackingField: []
+  <BlockedTrays>k__BackingField: []
   <Spawners>k__BackingField:
   - traySpawnerPrefab: {fileID: 5276270385975151495, guid: d7261481e694eb34798c654928cc1b56,
       type: 3}

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameResultUI : MonoBehaviour
 {
@@ -6,9 +7,13 @@ public class GameResultUI : MonoBehaviour
     [SerializeField] private GameObject LostPanel;
 
 
-    private void Start()
+    private void Awake()
     {
         GameManager.Instance.OnStateChanged += GameManager_OnStateChanged;
+    }
+
+    private void Start()
+    {
         Hide();
     }
 
@@ -42,5 +47,10 @@ public class GameResultUI : MonoBehaviour
             WinPanel.SetActive(false);
             LostPanel.SetActive(true);
         }
+    }
+
+    public void ResetGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }
