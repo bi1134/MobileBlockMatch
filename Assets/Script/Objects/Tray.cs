@@ -7,7 +7,6 @@ using System.Collections;
 
 public class Tray : GridObjects
 {
-    public event EventHandler OnTrayFinished;
     public Vector3 GetVisualOffSet() => visual.originalLocalOffset;
     public Vector3Int GetGridPosition() => currentGridPos;
     public TrayShapeData GetShapeData() => shapeData;
@@ -69,9 +68,9 @@ public class Tray : GridObjects
         }
     }
 
-    private IEnumerator DestroyAfterVisual()
+    private void DestroyAfterVisual()
     {
-        yield return Helpers.GetWaitForSecond(.5f);
+        visual.ResetVisual();
         gameObject.SetActive(false);
     }
 
@@ -81,6 +80,7 @@ public class Tray : GridObjects
     public void OnPickUp()
     {
         if (!IsUnlocked() || IsBusy()) return;
+        SoundEventManager.OnAnyTrayPickupPlay?.Invoke(this, EventArgs.Empty);
         originalGridPos = currentGridPos;
         lastValidGridPos = currentGridPos;
         UnregisterSelf();
@@ -107,6 +107,8 @@ public class Tray : GridObjects
         transform.position = snappedWorld;
 
         RegisterSelf();
+        SoundEventManager.OnAnyTrayDropPlay?.Invoke(this, EventArgs.Empty);
+
         //start coroutine for drop animation + neighbor check
         if (currentGridPos != null)
             StartCoroutine(HandleDropAndCheck(currentGridPos));
@@ -234,6 +236,7 @@ public class Tray : GridObjects
         }
 
         isRunningRecursiveSort = true;
+
 
         yield return TrayCascadeSorter.StartBreadthFirstSort(this, () =>
         {
@@ -444,16 +447,13 @@ public class Tray : GridObjects
             isFinishing = true;
             isBeingDestroyed = true;
             this.enabled = false;
-
             // no tween kill until food positions have fully settled
             yield return new WaitForSeconds(0.2f);
-
             KillAllTweens();
             placementSystem.AllPlannedTrays.Remove(this);
             UnregisterSelf();
-            visual.ShakeScale();
-            OnTrayFinished?.Invoke(this, EventArgs.Empty);
-            StartCoroutine(DestroyAfterVisual());
+            visual.DestroyGoesUp(() => DestroyAfterVisual());
+            GameEventManager.OnTrayFinished?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -509,11 +509,18 @@ public class Tray : GridObjects
 
         seq.Join(t1Seq).Join(t2Seq).Join(t1Scale).Join(t2Scale);
 
+        float eventTime = totalDuration * 0.15f; // when jump starts (after dip)
+        seq.InsertCallback(eventTime, () =>
+        {
+            if (me == null || other == null || me.isFinishing || other.isFinishing)
+                return;
+            SoundEventManager.OnAnyFoodSwap?.Invoke(this, EventArgs.Empty);
+        });
+
         seq.OnComplete(() =>
         {
             if (me == null || other == null || me.isFinishing || other.isFinishing)
                 return;
-
             t1.SetParent(other.foodGrid.transform, true);
             t2.SetParent(me.foodGrid.transform, true);
 

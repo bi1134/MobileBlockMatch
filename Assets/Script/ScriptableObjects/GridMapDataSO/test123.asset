@@ -19,7 +19,7 @@ MonoBehaviour:
   <Trays>k__BackingField:
   - trayPrefab: {fileID: 4456156309129873927, guid: 1958579e6464046409da4b2277e4f989,
       type: 3}
-    position: {x: 0, y: 0, z: 0}
+    position: {x: -1, y: 0, z: 0}
     uniqueID: 0
   - trayPrefab: {fileID: 4456156309129873927, guid: eacd2ee4dad82ff4ab5330a397c885d3,
       type: 3}
@@ -45,8 +45,26 @@ MonoBehaviour:
     position: {x: 0, y: 0, z: -3}
     movementAxis: 0
     uniqueID: 5
-  <BlockedTrays>k__BackingField: []
-  <Spawners>k__BackingField: []
+  <BlockedTrays>k__BackingField:
+  - trayPrefab: {fileID: 1870655088347941781, guid: 5a9f409208729284d9de3fb0eb58b2ec,
+      type: 3}
+    position: {x: -1, y: 0, z: 3}
+    requiredCompletedTrays: 2
+    uniqueID: 6
+  <Spawners>k__BackingField:
+  - traySpawnerPrefab: {fileID: 5276270385975151495, guid: d7261481e694eb34798c654928cc1b56,
+      type: 3}
+    TraysToSpawn:
+    - trayPrefab: {fileID: 4456156309129873927, guid: f123f07a07eb229459599bcbb2c51404,
+        type: 3}
+      position: {x: 0, y: 0, z: 0}
+      uniqueID: 7
+    - trayPrefab: {fileID: 4456156309129873927, guid: 92a212605e5019e4796a54418e122ca7,
+        type: 3}
+      position: {x: 0, y: 0, z: 0}
+      uniqueID: 8
+    position: {x: 0, y: 0, z: 0}
+    direction: 3
   <ActiveFoodTheme>k__BackingField:
   - {fileID: 11400000, guid: 67906e77c2a156943982056e8a5f6c7b, type: 2}
   - {fileID: 11400000, guid: 66a706040fb058c4cbf81e77382ab425, type: 2}

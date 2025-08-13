@@ -7,30 +7,15 @@ public class GamePlayProgressUI : MonoBehaviour
     [SerializeField] private Image moveCountImage;
     [SerializeField] private TextMeshProUGUI moveCount;
 
-    private void Awake()
+    private void OnEnable()
     {
-        GameManager.Instance.OnProgressChanged += OnProgressChanged;
-        GameManager.Instance.OnStateChanged += OnStateChanged;
+        AssignSignal();
     }
 
-    private void Start()
+    private void OnDisable()
     {
-        Hide();
+        ResetSignal();
     }
-
-    private void OnStateChanged(object sender, System.EventArgs e)
-    {
-        if(GameManager.Instance.CurrentState == GameState.Playing)
-        {
-            Show();
-        }
-        else
-        {
-            Hide();
-        }
-    }
-
-   
 
     private void Hide()
     {
@@ -42,10 +27,19 @@ public class GamePlayProgressUI : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-
-    private void OnProgressChanged(object sender, GameManager.OnProgressChangedEventArgs e)
+    private void OnProgressChanged(object sender, GameEventManager.OnProgressChangedEventArgs e)
     {
         moveCount.text = e.moveCount.ToString();
         moveCountImage.fillAmount = e.progressNormalized;
+    }
+
+    private void ResetSignal()
+    {
+        GameEventManager.OnProgressChanged -= OnProgressChanged;
+    }
+
+    private void AssignSignal()
+    {
+        GameEventManager.OnProgressChanged += OnProgressChanged;
     }
 }

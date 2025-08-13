@@ -1,32 +1,13 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameResultUI : MonoBehaviour
 {
     [SerializeField] private GameObject WinPanel;
     [SerializeField] private GameObject LostPanel;
 
-
-    private void Awake()
+    private void OnEnable()
     {
-        GameManager.Instance.OnStateChanged += GameManager_OnStateChanged;
-    }
-
-    private void Start()
-    {
-        Hide();
-    }
-
-    private void GameManager_OnStateChanged(object sender, System.EventArgs e)
-    {
-        if (GameManager.Instance.IsGameEnd())
-        {
-            Show();
-        }
-        else
-        {
-            Hide();
-        }
+        Show();
     }
 
     private void Hide()
@@ -36,7 +17,6 @@ public class GameResultUI : MonoBehaviour
 
     private void Show()
     {
-        gameObject.SetActive(true);
         if (GameManager.Instance.IsGameWin())
         {
             WinPanel.SetActive(true);
@@ -49,8 +29,17 @@ public class GameResultUI : MonoBehaviour
         }
     }
 
-    public void ResetGame()
+    public void ResetGameButton()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        SoundEventManager.OnAnyButtonClicked?.Invoke(this, System.EventArgs.Empty);
+        //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        PlacementSystem.Instance.LoadMap();
+        Hide();
     }
+
+    public void ContinueButton()
+    {
+        SoundEventManager.OnAnyButtonClicked?.Invoke(this, System.EventArgs.Empty);
+    }
+
 }

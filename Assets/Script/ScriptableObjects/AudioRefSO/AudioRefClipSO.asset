@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9089906d3bd1a714c956db7cf6bf5521, type: 3}
+  m_Name: AudioRefClipSO
+  m_EditorClassIdentifier: 
+  trayPickup:
+  - {fileID: 8300000, guid: 6f51bf03fbd8ead4496dff05473be9de, type: 3}
+  trayDrop:
+  - {fileID: 8300000, guid: fb777702c71b9574098138a3173b7f91, type: 3}
+  traySpawn:
+  - {fileID: 8300000, guid: b2abe18c6e216f64787aa88489427a5e, type: 3}
+  itemMove:
+  - {fileID: 8300000, guid: 0d3224389cbbe9a458dff2fd8e10a8b6, type: 3}
+  buttonClick:
+  - {fileID: 8300000, guid: d544bf734d0e4974bb3f498538bcbf5b, type: 3}

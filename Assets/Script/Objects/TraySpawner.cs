@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -42,7 +41,6 @@ public class TraySpawner : GridObjects
         if (trayGO.TryGetComponent(out Tray newTray))
         {
             newTray.ApplyFoodSet(PlacementSystem.Instance.currentMap.ActiveFoodTheme);
-            newTray.OnTrayFinished += GameManager.Instance.HandleTrayFinished;
             PlacementSystem.Instance.RegisterTray(newTray);
             tray.currentGridPos = gridPos;
             tray.originalGridPos = gridPos;
@@ -51,7 +49,6 @@ public class TraySpawner : GridObjects
             var foodList = FindPlannedFood(trayData);
             if (foodList != null)
             {
-                Debug.Log($"Found food for tray {prefab.name} with {foodList.Count} items.");
                 newTray.DelayedSpawnFromColorList(foodList);
             }
             else

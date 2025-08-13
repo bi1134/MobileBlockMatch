@@ -1,6 +1,7 @@
 using UnityEngine;
 using DG.Tweening;
 using System.Collections;
+using System;
 
 public class TrayVisual : MonoBehaviour
 {
@@ -35,23 +36,34 @@ public class TrayVisual : MonoBehaviour
         IsDropFinished = true;
     }
 
-    private IEnumerator DelayedDestroy()
+    public void DestroyGoesUp(Action onComplete = null)
     {
-        IsDestroyFinished = false;
-        yield return this.transform.DOShakeScale(.5f, 3, 10, 90).SetEase(Ease.InOutElastic)
-            .WaitForCompletion();
-        IsDestroyFinished = true;
-    }
+        ShakeScale();
 
-    public void FollowMouse(Vector3 worldPos)
-    {
-        transform.position = worldPos;
-    }
+        Sequence seq = DOTween.Sequence();
 
-    public void Drop()
-    {
-        this.transform.DOLocalMove(originalLocalOffset, 0.25f)
-            .SetEase(Ease.InBounce);
+        Vector3 originalScale = transform.localScale;
+        seq.timeScale = 1.5f;
+
+        // main movement (go up)
+        seq.Append(transform.DOMoveZ(transform.position.z + 1f, 1f)
+            .SetEase(Ease.InOutBack));
+        seq.Join(transform.DOMoveY(1.25f, 1f)
+            .SetEase(Ease.InOutBack));
+
+        //stretch up make the rubber-y feel
+        seq.Insert(0.125f, transform.DOScaleZ(2f, 0.25f).SetEase(Ease.OutQuad, 1f, 0.2f));
+        seq.Join(transform.DOScaleX(0.5f, 0.25f).SetEase(Ease.OutQuad, 1f, 0.2f));
+
+        //snap back
+        seq.Insert(0.3f, transform.DOScaleZ(originalScale.z, 0.25f).SetEase(Ease.InQuart));
+        seq.Join(transform.DOScaleX(originalScale.x, 0.25f).SetEase(Ease.InQuart));
+
+        //set to 0 before the seq end
+        float disappearTime = 0.6f; //start disappearing at 60% of move duration
+        seq.Insert(disappearTime, transform.DOScale(Vector3.zero, 0.25f)
+            .SetEase(Ease.InBack));
+        seq.OnComplete(() => onComplete?.Invoke());
     }
 
     public void SnapToOffset()
@@ -73,7 +85,6 @@ public class TrayVisual : MonoBehaviour
         moveTween = transform.DOLocalMove(lifted, 0.25f).SetEase(Ease.OutQuad);
     }
 
-
     public Tween PlayDropAnimationSnap(Vector3 worldTarget)
     {
         moveTween?.Kill(); // kill any active animation
@@ -82,9 +93,9 @@ public class TrayVisual : MonoBehaviour
         return moveTween;
     }
 
-    public void PlayDropAnimation()
+    public void ResetVisual()
     {
-        moveTween?.Kill(); // kill any active animation
-        moveTween = transform.DOLocalMove(originalLocalOffset, 0.25f).SetEase(Ease.OutBounce);
+        this.transform.position = Vector3.zero;
+        this.transform.DOScale(Vector3.one, 1);
     }
 }

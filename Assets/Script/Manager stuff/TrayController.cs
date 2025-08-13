@@ -11,7 +11,7 @@ public class TrayController : MonoBehaviour
     [SerializeField, Range(0f, 0.5f)]
     private float trayCollisionMargin = 0.15f;
     [SerializeField] private float trayCollisionDirection = 0.15f;
-    [SerializeField] private float trayDragCooldown = 0.5f; // tweak as needed
+    [SerializeField] public float trayDragCooldown = 0.5f; // tweak as needed
     [SerializeField] private bool isTrayDragLocked = false;
     [SerializeField] private float moveSpeed = 20f;
 
@@ -82,7 +82,7 @@ public class TrayController : MonoBehaviour
 
             if (trayDragTimer <= 0f)
             {
-                trayDragTimer = 0;
+                trayDragTimer = 0f;
                 isTrayDragLocked = false;
             }
         }
@@ -91,7 +91,7 @@ public class TrayController : MonoBehaviour
     public void ForcePickupDelay()
     {
         isTrayDragLocked = true;
-        trayDragTimer = 0.2f;
+        trayDragTimer = 0.16f;
         isWaitingForTrayClear = false;
         lastDropTime = Time.time;
     }
@@ -107,7 +107,7 @@ public class TrayController : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, trayLayer))
         {
             Tray tray = hit.collider.GetComponent<Tray>();
-            if (tray != null && tray.IsUnlocked())
+            if (tray != null && tray.IsUnlocked() && !tray.IsBusy())
             {
                 BeginDrag(tray);
             }

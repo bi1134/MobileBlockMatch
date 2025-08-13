@@ -1,17 +1,16 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class GameStartingUI : MonoBehaviour
 {
-
-    private void Start()
+    private void OnEnable()
     {
         Show();
     }
 
     public void OnStartButtonClicked()
     {
-        GameManager.Instance.SetGameState(GameState.Playing);
+        SoundEventManager.OnAnyButtonClicked?.Invoke(this, System.EventArgs.Empty);
+        GameManager.Instance.SetGameState(GameState.Starting);
         Hide();
     }
 

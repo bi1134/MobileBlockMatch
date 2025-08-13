@@ -16,8 +16,7 @@ public class BlockedTray : Tray
         base.Start();
         UpdateVisual();
 
-        if (GameManager.Instance != null)
-            GameManager.Instance.OnTrayFinished += TryUnlock;
+        GameEventManager.OnTrayFinished += TryUnlock;
     }
 
     public void SetUnlockRequirement(int requirement)
@@ -66,8 +65,7 @@ public class BlockedTray : Tray
 
     private void OnDestroy()
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.OnTrayFinished -= TryUnlock;
+        GameEventManager.OnTrayFinished -= TryUnlock;
     }
 }
 
