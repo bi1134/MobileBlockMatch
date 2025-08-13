@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abe13ef36298e5c429a08bd64af99f87, type: 3}
+  m_Name: GridMap4x4
+  m_EditorClassIdentifier: 
+  <GridSize>k__BackingField: {x: 4, y: 4}
+  <GridOrigin>k__BackingField: {x: 0, y: 0, z: 0}
+  <MaxMoveCount>k__BackingField: 10
+  <BlockedCells>k__BackingField: []
+  <Trays>k__BackingField:
+  - trayPrefab: {fileID: 4456156309129873927, guid: eacd2ee4dad82ff4ab5330a397c885d3,
+      type: 3}
+    position: {x: -2, y: 0, z: 1}
+    uniqueID: 0
+  - trayPrefab: {fileID: 4456156309129873927, guid: 1958579e6464046409da4b2277e4f989,
+      type: 3}
+    position: {x: 1, y: 0, z: 1}
+    uniqueID: 1
+  - trayPrefab: {fileID: 4456156309129873927, guid: 227ea20fba322ee4fb4558bc0b9302c1,
+      type: 3}
+    position: {x: -2, y: 0, z: -2}
+    uniqueID: 2
+  - trayPrefab: {fileID: 4456156309129873927, guid: 1c614fe55f752ad4e8c893bef219fa89,
+      type: 3}
+    position: {x: 1, y: 0, z: -2}
+    uniqueID: 3
+  <DirectionalTrays>k__BackingField: []
+  <BlockedTrays>k__BackingField:
+  - trayPrefab: {fileID: 1870655088347941781, guid: 5a9f409208729284d9de3fb0eb58b2ec,
+      type: 3}
+    position: {x: -1, y: 0, z: 0}
+    requiredCompletedTrays: 4
+    uniqueID: 4
+  - trayPrefab: {fileID: 1870655088347941781, guid: 01c1cc4310290224a8e028c0c94f1606,
+      type: 3}
+    position: {x: 0, y: 0, z: 0}
+    requiredCompletedTrays: 4
+    uniqueID: 5
+  - trayPrefab: {fileID: 1870655088347941781, guid: 85e3bb623854e79408f641683087c100,
+      type: 3}
+    position: {x: -1, y: 0, z: -1}
+    requiredCompletedTrays: 4
+    uniqueID: 6
+  - trayPrefab: {fileID: 1870655088347941781, guid: 519a23dc2056fb24c878eaa33093af3c,
+      type: 3}
+    position: {x: 0, y: 0, z: -1}
+    requiredCompletedTrays: 4
+    uniqueID: 7
+  <Spawners>k__BackingField: []
+  <ActiveFoodTheme>k__BackingField:
+  - {fileID: 11400000, guid: 6c6a3ecd7d4700243859cb4274f6a9d0, type: 2}
+  - {fileID: 11400000, guid: 67906e77c2a156943982056e8a5f6c7b, type: 2}
+  - {fileID: 11400000, guid: ea3d57324cc095042bfd410f8a598632, type: 2}
+  - {fileID: 11400000, guid: 66a706040fb058c4cbf81e77382ab425, type: 2}
+  - {fileID: 11400000, guid: 568c8a131d7f55c40a6e335da9460e38, type: 2}

@@ -14,40 +14,53 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <GridSize>k__BackingField: {x: 5, y: 5}
   <GridOrigin>k__BackingField: {x: 0, y: 0, z: 0}
-  <MaxMoveCount>k__BackingField: 20
+  <MaxMoveCount>k__BackingField: 10
   <BlockedCells>k__BackingField: []
   <Trays>k__BackingField:
-  - trayPrefab: {fileID: 6076032367857896638, guid: b72c270ef297b5e4683c65b1654e44fc, type: 3}
+  - trayPrefab: {fileID: 4456156309129873927, guid: 227ea20fba322ee4fb4558bc0b9302c1,
+      type: 3}
     position: {x: 2, y: 0, z: 1}
     uniqueID: 0
-  - trayPrefab: {fileID: 6076032367857896638, guid: 94e9bbe87345a6b418aaeafcedcc5ee1, type: 3}
+  - trayPrefab: {fileID: 4456156309129873927, guid: 1958579e6464046409da4b2277e4f989,
+      type: 3}
     position: {x: -2, y: 0, z: 1}
     uniqueID: 1
-  - trayPrefab: {fileID: 6076032367857896638, guid: 04b4f886f858cfa4e893218931d270f5, type: 3}
+  - trayPrefab: {fileID: 4456156309129873927, guid: eacd2ee4dad82ff4ab5330a397c885d3,
+      type: 3}
     position: {x: 1, y: 0, z: 2}
     uniqueID: 2
-  - trayPrefab: {fileID: 6076032367857896638, guid: f29a2883571eeda47b8e713cfe6ef5d2, type: 3}
+  - trayPrefab: {fileID: 4456156309129873927, guid: 227ea20fba322ee4fb4558bc0b9302c1,
+      type: 3}
     position: {x: -1, y: 0, z: 2}
     uniqueID: 3
-  - trayPrefab: {fileID: 6076032367857896638, guid: 04b4f886f858cfa4e893218931d270f5, type: 3}
+  - trayPrefab: {fileID: 4456156309129873927, guid: eacd2ee4dad82ff4ab5330a397c885d3,
+      type: 3}
     position: {x: -1, y: 0, z: -2}
     uniqueID: 4
-  - trayPrefab: {fileID: 6076032367857896638, guid: 2e2f7d9fbae223d4a83d1561b3ad3909, type: 3}
+  - trayPrefab: {fileID: 4456156309129873927, guid: 1958579e6464046409da4b2277e4f989,
+      type: 3}
     position: {x: 1, y: 0, z: -2}
     uniqueID: 5
-  - trayPrefab: {fileID: 6076032367857896638, guid: b72c270ef297b5e4683c65b1654e44fc, type: 3}
+  - trayPrefab: {fileID: 4456156309129873927, guid: 1c614fe55f752ad4e8c893bef219fa89,
+      type: 3}
     position: {x: 2, y: 0, z: -1}
     uniqueID: 6
-  - trayPrefab: {fileID: 6076032367857896638, guid: 04b4f886f858cfa4e893218931d270f5, type: 3}
+  - trayPrefab: {fileID: 4456156309129873927, guid: 1c614fe55f752ad4e8c893bef219fa89,
+      type: 3}
     position: {x: -2, y: 0, z: -1}
     uniqueID: 7
+  <DirectionalTrays>k__BackingField: []
+  <BlockedTrays>k__BackingField: []
   <Spawners>k__BackingField:
-  - traySpawnerPrefab: {fileID: 7082656774169433024, guid: d61573d65a1e2524b9f5327111e5a696, type: 3}
+  - traySpawnerPrefab: {fileID: 5276270385975151495, guid: d7261481e694eb34798c654928cc1b56,
+      type: 3}
     TraysToSpawn:
-    - trayPrefab: {fileID: 6076032367857896638, guid: 04b4f886f858cfa4e893218931d270f5, type: 3}
+    - trayPrefab: {fileID: 4456156309129873927, guid: 1c690bf11dfadce4b9a4ab4d1c6d6690,
+        type: 3}
       position: {x: 0, y: 0, z: 0}
       uniqueID: 8
-    - trayPrefab: {fileID: 6076032367857896638, guid: f29a2883571eeda47b8e713cfe6ef5d2, type: 3}
+    - trayPrefab: {fileID: 4456156309129873927, guid: ed5be4832f82b1b4cb4099a66946bd8e,
+        type: 3}
       position: {x: 0, y: 0, z: 0}
       uniqueID: 9
     position: {x: 0, y: 0, z: 3}

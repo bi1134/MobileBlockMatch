@@ -24,10 +24,10 @@ public class TextEffect : MonoBehaviour
     {
         transform.DOScale(Vector3.one, .5f).SetEase(Ease.OutBack);
 
-        transform.DOMoveY(2, 5)
+        transform.DOMoveY(1.5f, 3)
             .SetEase(Ease.Linear);
 
-        transform.DOMoveZ(2, 5)
+        transform.DOMoveZ(transform.position.z + 2, 5)
             .SetEase(Ease.Linear).OnComplete(() => Destroy(transform.parent.gameObject));
 
         spriteRenderer.DOFade(0, 3)

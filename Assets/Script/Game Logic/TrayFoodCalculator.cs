@@ -12,7 +12,7 @@ public static class TrayFoodCalculator
 {
     public static TraySpawnPlan CreateFoodPlan(List<TrayPlacementData> trayDataList)
     {
-        const int maxRetries = 10;
+        const int maxRetries = 15;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {

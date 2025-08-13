@@ -2081,12 +2081,15 @@ MonoBehaviour:
   cellIndicator: {fileID: 1517313348}
   inputManager: {fileID: 1538807019}
   grid: {fileID: 279783619}
-  currentMap: {fileID: 11400000, guid: c070800fbff3b0d488384bb5bf6cabbe, type: 2}
+  currentMapGrid:
+  - {fileID: 11400000, guid: c070800fbff3b0d488384bb5bf6cabbe, type: 2}
+  - {fileID: 11400000, guid: 90551a8924b3acb49bd111350e3c96ba, type: 2}
   wallPrefab: {fileID: 1792876807972813046, guid: f17eafbe33d0b7142ab417aecf1f8968,
     type: 3}
   cornerWallPrefab: {fileID: 718713443012183331, guid: f1d25b85c7eb36f4db24938197b3017f,
     type: 3}
   gridParent: {fileID: 1551921499}
+  currentMap: {fileID: 11400000, guid: c070800fbff3b0d488384bb5bf6cabbe, type: 2}
 --- !u!1 &643360644
 GameObject:
   m_ObjectHideFlags: 0

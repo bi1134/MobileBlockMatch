@@ -34,12 +34,12 @@ public class GameResultUI : MonoBehaviour
         SoundEventManager.OnAnyButtonClicked?.Invoke(this, System.EventArgs.Empty);
         //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         PlacementSystem.Instance.LoadMap();
-        Hide();
     }
 
     public void ContinueButton()
     {
         SoundEventManager.OnAnyButtonClicked?.Invoke(this, System.EventArgs.Empty);
+        PlacementSystem.Instance.ContiueMap();
     }
 
 }

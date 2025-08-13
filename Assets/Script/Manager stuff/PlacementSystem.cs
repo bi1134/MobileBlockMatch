@@ -11,11 +11,12 @@ public class PlacementSystem : MonoBehaviour
     [SerializeField] public InputManager inputManager;
     [SerializeField] public Grid grid;
 
-    [SerializeField] public GridMapData currentMap;
+    [SerializeField] public GridMapData[] currentMapGrid;
     [SerializeField] private GameObject wallPrefab;
     [SerializeField] private GameObject cornerWallPrefab;
     [SerializeField] public Transform gridParent;
 
+    public GridMapData currentMap;
     private Dictionary<Vector3Int, GridObjects> occupiedCells = new();
     public Dictionary<TrayPlacementData, List<ItemColorType>> PlannedTrayFoodMap { get; set; } = new();
 
@@ -26,7 +27,8 @@ public class PlacementSystem : MonoBehaviour
     public List<TraySpawner> TraySpawners => traySpawners;
 
     private List<TrayPlacementData> plannedTrayData = new();
-
+ 
+    private int currentMapIndex = 0; // Current map index, can be used to switch maps or continue
     #region Startups
     private void Awake()
     {
@@ -38,10 +40,21 @@ public class PlacementSystem : MonoBehaviour
         LoadMap();
     }
 
+    public void ContiueMap()
+    {
+        currentMapIndex++;
+        if(currentMapIndex > currentMapGrid.Count() - 1 )
+        {
+            currentMapIndex = 0; // Reset to first map if out of bounds
+        }
+        print("current map num: " + currentMapIndex);
+        currentMap = currentMapGrid[currentMapIndex];
+        LoadMap();
+    }
+
     public void LoadMap()
     {
         GameManager.Instance.ResetState(currentMap.MaxMoveCount);
-
         ClearGrid();
         SpawnBlockedCells();
 
@@ -52,6 +65,13 @@ public class PlacementSystem : MonoBehaviour
         CollectPlannedTrayData(); // Combine static + spawner trays
 
         var foodPlan = TrayFoodCalculator.CreateFoodPlan(plannedTrayData);
+
+        if (foodPlan == null)
+        {
+            Debug.LogError("Failed to create food plan for this map.");
+            return;
+        }
+
         GameManager.Instance.BlockedTrayFoodMap = foodPlan.BlockedTrayFood;
         GameManager.Instance.PlannedTrayFoodMap = foodPlan.NormalTrayFoodByData;
 
