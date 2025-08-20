@@ -8,15 +8,8 @@ using System.Collections;
 public class Tray : GridObjects
 {
     public Vector3 GetVisualOffSet() => visual.originalLocalOffset;
-    public Vector3Int GetGridPosition() => currentGridPos;
     public TrayShapeData GetShapeData() => shapeData;
     public virtual bool IsUnlocked() => true;
-    public static void LogPoolState(List<ItemColorType> pool, int startIndex)
-    {
-        Debug.Log($"Remaining pool items: {pool.Count - startIndex}");
-        for (int i = startIndex; i < pool.Count; i++)
-            Debug.Log($"Leftover [{i - startIndex}]: {pool[i]}");
-    }
 
     #region References and variables
     [Header("References")]
@@ -26,6 +19,7 @@ public class Tray : GridObjects
     [SerializeField] private List<FoodData> foodTheme;
 
     public List<Food> activeFoods = new();
+    public Vector3Int localPosition;
 
     public Vector3Int originalGridPos;
     public Vector3Int lastValidGridPos;
@@ -42,7 +36,6 @@ public class Tray : GridObjects
     {
         base.Start();
         visual.SnapToOffset();
-        RegisterSelf();
     }
 
     public void DelayedSpawnFromColorList(List<ItemColorType> colors)
@@ -577,9 +570,20 @@ public class Tray : GridObjects
         return isSwapping || isRunningRecursiveSort || isBeingDestroyed || isFinishing;
     }
 
-
-    public Vector3Int GetGridPosAtWorld(Vector3 worldPos)
+    private void OnDrawGizmos()
     {
-        return PlacementSystem.Instance.grid.WorldToCell(worldPos);
+        if (PlacementSystem.Instance == null) return;
+
+        Gizmos.color = Color.green;
+        List<Vector3Int> occupied = GetOccupiedCells(currentGridPos);
+
+        foreach (var cell in occupied)
+        {
+            Vector3 world = PlacementSystem.Instance.grid.CellToWorld(cell);
+            Vector3 center = world + PlacementSystem.Instance.grid.cellSize / 2f;
+            Vector3 size = PlacementSystem.Instance.grid.cellSize * 0.9f;
+
+            Gizmos.DrawWireCube(center, size);
+        }
     }
 }

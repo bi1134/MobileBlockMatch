@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -32,17 +33,31 @@ public class GameManager : MonoBehaviour
 
     public int comboCheck;
 
+    //fps
+    private int lastFrameIndex;
+    private float[] frameDeltaTimeArray;
+
+    [SerializeField] private TextMeshProUGUI fpsString;
+
     private void Awake()
     {
         Instance = this;
         GameEventManager.OnTrayFinished += HandleTrayFinished;
         winLoseChecker = new WinLoseChecker();
         comboChecker = new ComboChecker(1f); // 0.5 seconds combo time limit
-        
+
+        Application.targetFrameRate = 60; // Set target frame rate to 60 FPS
+
+        frameDeltaTimeArray = new float[50]; // Array to store the last 50 frame delta times
     }
 
     private void Update()
     {
+        frameDeltaTimeArray[lastFrameIndex] = Time.deltaTime;
+        lastFrameIndex = (lastFrameIndex + 1) % frameDeltaTimeArray.Length;
+
+        fpsString.text = Mathf.RoundToInt(CalculateFPS()).ToString();
+
         comboCheck = comboChecker.ComboCount;
         switch (CurrentState)
         {
@@ -58,6 +73,17 @@ public class GameManager : MonoBehaviour
                 HandleWinLoseCheckDelay();
                 break;
         }
+    }
+
+    private float CalculateFPS()
+    {
+        float total = 0f;
+        foreach (float deltaTime in frameDeltaTimeArray)
+        {
+            total += deltaTime;
+        }
+
+        return frameDeltaTimeArray.Length / total;
     }
 
     public void HandleTrayFinished(object sender, EventArgs e)

@@ -10,7 +10,6 @@ public class GameEventManager
     public static EventHandler OnTrayFinished;
 
 
-
     public static event EventHandler<OnProgressChangedEventArgs> OnProgressChanged;
     public class OnProgressChangedEventArgs : EventArgs
     {

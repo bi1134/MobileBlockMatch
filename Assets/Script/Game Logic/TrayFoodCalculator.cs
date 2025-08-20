@@ -8,24 +8,89 @@ public class TraySpawnPlan
     public Dictionary<Tray, List<ItemColorType>> BlockedTrayFood = new();
 }
 
+public struct BlockedTraySpec
+{
+    public TrayPlacementData data;
+    public int requirement;
+}
+
 public static class TrayFoodCalculator
 {
-    public static TraySpawnPlan CreateFoodPlan(List<TrayPlacementData> trayDataList)
+    public static TraySpawnPlan CreateFoodPlan(
+        List<TrayPlacementData> allTrays,              // all planned trays (normal + dir + blocked + spawner)
+        List<BlockedTraySpec> blockedSpecs             // blocked trays with requirement
+        )
     {
-        const int maxRetries = 15;
+        // startSet = everything that is NOT blocked (i.e., available at start, including spawner trays)
+        var blockedSet = new HashSet<TrayPlacementData>(blockedSpecs.Select(b => b.data));
+        var startSet = allTrays.Where(d => !blockedSet.Contains(d)).ToList();
 
+        int minReq = blockedSpecs.Count == 0 ? 0 : blockedSpecs.Min(b => b.requirement);
+
+        const int maxRetries = 30;
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
-            var plan = TryCreatePlanOnce(trayDataList);
-            if (plan != null)
+            var plan = TryCreatePlanOnce(allTrays);
+            if (plan == null) continue;
+
+            // If first locked group needs ALL start-set finished -> enforce full solvable start-set
+            bool ok = true;
+            if (minReq >= startSet.Count)
             {
-                Debug.Log($"Plan succeeded on attempt {attempt}");
+                ok = IsSubsetFullySolvable(plan.NormalTrayFoodByData, startSet);
+            }
+
+            if (ok)
+            {
+                // good plan
+                Debug.Log($"Plan w/ blocked constraints succeeded on attempt {attempt}");
                 return plan;
             }
         }
 
-        Debug.LogError("Failed to generate a valid tray food plan after retries.");
+        Debug.LogError("Failed to generate a valid tray food plan (blocked constraints).");
         return null;
+    }
+
+    // --- Feasibility check: all start-set trays can self-finish (ignoring movement) ---
+    private static bool IsSubsetFullySolvable(
+        Dictionary<TrayPlacementData, List<ItemColorType>> assign,
+        List<TrayPlacementData> subset)
+    {
+        // Need_X: how many of color X are still needed by X-colored trays.
+        // Surplus_X: how many X we have sitting in non-X trays.
+        var need = new Dictionary<ItemColorType, int>();
+        var surplus = new Dictionary<ItemColorType, int>();
+
+        foreach (var data in subset)
+        {
+            if (!data.trayPrefab || !data.trayPrefab.TryGetComponent(out Tray tray)) continue;
+            var shape = tray.GetShapeData();
+            if (shape == null) continue;
+
+            int cap = CountValidSpawnPoints(shape);
+            var homeColor = shape.trayColor;
+
+            if (!assign.TryGetValue(data, out var items)) continue;
+
+            int own = items.Count(c => c == homeColor);
+            int needOwn = Mathf.Max(0, cap - own);
+            need[homeColor] = need.GetValueOrDefault(homeColor) + needOwn;
+
+            foreach (var c in items)
+                if (!Equals(c, homeColor))
+                    surplus[c] = surplus.GetValueOrDefault(c) + 1;
+        }
+
+        foreach (var kv in need)
+        {
+            var color = kv.Key;
+            int needC = kv.Value;
+            int supC = surplus.GetValueOrDefault(color);
+            if (supC < needC) return false;
+        }
+
+        return true;
     }
 
     private static TraySpawnPlan TryCreatePlanOnce(List<TrayPlacementData> trayDataList)

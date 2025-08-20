@@ -63,5 +63,5 @@ public class InputManager : MonoBehaviour
 #else
         return false;
 #endif
-    }
+    }   
 }

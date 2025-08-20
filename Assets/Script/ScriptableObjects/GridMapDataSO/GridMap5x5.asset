@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <GridSize>k__BackingField: {x: 5, y: 5}
   <GridOrigin>k__BackingField: {x: 0, y: 0, z: 0}
-  <MaxMoveCount>k__BackingField: 10
+  <MaxMoveCount>k__BackingField: 100
   <BlockedCells>k__BackingField: []
   <Trays>k__BackingField:
   - trayPrefab: {fileID: 4456156309129873927, guid: 227ea20fba322ee4fb4558bc0b9302c1,

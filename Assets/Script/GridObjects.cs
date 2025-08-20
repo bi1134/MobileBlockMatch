@@ -4,8 +4,8 @@ using UnityEngine;
 public class GridObjects : MonoBehaviour
 {
     [SerializeField] protected Vector2Int size = Vector2Int.one;
-
     [SerializeField] public Vector3Int currentGridPos;
+    public Vector3Int GetGridPosition() => currentGridPos;
     protected PlacementSystem placementSystem;
 
     protected virtual void Start()
@@ -37,6 +37,7 @@ public class GridObjects : MonoBehaviour
 
         return occupied;
     }
+
 
     protected void RegisterSelf()
     {

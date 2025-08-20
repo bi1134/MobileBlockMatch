@@ -17,7 +17,7 @@ public class PlacementSystem : MonoBehaviour
     [SerializeField] public Transform gridParent;
 
     public GridMapData currentMap;
-    private Dictionary<Vector3Int, GridObjects> occupiedCells = new();
+    public Dictionary<Vector3Int, GridObjects> occupiedCells = new();
     public Dictionary<TrayPlacementData, List<ItemColorType>> PlannedTrayFoodMap { get; set; } = new();
 
     private List<Tray> activeTrays = new();
@@ -57,14 +57,20 @@ public class PlacementSystem : MonoBehaviour
         GameManager.Instance.ResetState(currentMap.MaxMoveCount);
         ClearGrid();
         SpawnBlockedCells();
-
+        SnapCameraToCenter();
         plannedTrayData.Clear();
         traySpawners.Clear();
         activeTrays.Clear();
 
         CollectPlannedTrayData(); // Combine static + spawner trays
 
-        var foodPlan = TrayFoodCalculator.CreateFoodPlan(plannedTrayData);
+        var blockedSpecs = currentMap.BlockedTrays.Select(bt => new BlockedTraySpec
+        {
+            data = bt.ToPlacementData(),
+            requirement = bt.requiredCompletedTrays
+        }).ToList();
+
+        var foodPlan = TrayFoodCalculator.CreateFoodPlan(plannedTrayData, blockedSpecs);
 
         if (foodPlan == null)
         {
@@ -98,7 +104,7 @@ public class PlacementSystem : MonoBehaviour
         Vector3 mousePosition = inputManager.GetSelectedMapPosition();
         Vector3Int gridPosition = grid.WorldToCell(mousePosition);
         mouseIndicator.transform.position = mousePosition;
-        cellIndicator.transform.position = grid.CellToWorld(gridPosition);
+        cellIndicator.transform.position = grid.CellToLocal(gridPosition);
     }
 
     #endregion
@@ -128,6 +134,28 @@ public class PlacementSystem : MonoBehaviour
         return obj;
     }
 
+    public bool IsCellInBounds(Vector3Int cell)
+    {
+        Vector2Int size = currentMap.GridSize;
+        Vector3Int origin = currentMap.GridOrigin;
+
+        int halfX = size.x / 2;
+        int halfZ = size.y / 2;
+
+        int minX = origin.x - halfX;
+        int maxX = origin.x + halfX - 1 + (size.x % 2); // inclusive
+        int minZ = origin.z - halfZ;
+        int maxZ = origin.z + halfZ - 1 + (size.y % 2); // inclusive
+
+        return cell.x >= minX && cell.x <= maxX &&
+               cell.z >= minZ && cell.z <= maxZ;
+    }
+
+    private bool IsCellBlocked(Vector3Int cell)
+    {
+        return currentMap.BlockedCells.Contains(cell);
+    }
+
     #endregion
 
     #region Generate statics walls and blocked cells
@@ -149,7 +177,7 @@ public class PlacementSystem : MonoBehaviour
         for (int x = startX + 1; x < endX; x++)
         {
             Vector3Int cell = new(x, 0, endZ);
-            if (currentMap.BlockedCells.Contains(cell) || IsTraySpawnerAt(cell)) continue;
+            if (IsCellBlocked(cell) || IsTraySpawnerAt(cell)) continue;
             SpawnWall(cell, Quaternion.identity);
         }
 
@@ -157,7 +185,7 @@ public class PlacementSystem : MonoBehaviour
         for (int x = startX + 1; x < endX; x++)
         {
             Vector3Int cell = new(x, 0, startZ);
-            if (currentMap.BlockedCells.Contains(cell) || IsTraySpawnerAt(cell)) continue;
+            if (IsCellBlocked(cell) || IsTraySpawnerAt(cell)) continue;
             SpawnWall(cell, Quaternion.identity);
         }
 
@@ -165,7 +193,7 @@ public class PlacementSystem : MonoBehaviour
         for (int z = startZ + 1; z < endZ; z++)
         {
             Vector3Int cell = new(startX, 0, z);
-            if (currentMap.BlockedCells.Contains(cell) || IsTraySpawnerAt(cell)) continue;
+            if (IsCellBlocked(cell) || IsTraySpawnerAt(cell)) continue;
             SpawnWall(cell, Quaternion.Euler(0, -90, 0));
         }
 
@@ -173,7 +201,7 @@ public class PlacementSystem : MonoBehaviour
         for (int z = startZ + 1; z < endZ; z++)
         {
             Vector3Int cell = new(endX, 0, z);
-            if (currentMap.BlockedCells.Contains(cell) || IsTraySpawnerAt(cell)) continue;
+            if (IsCellBlocked(cell) || IsTraySpawnerAt(cell)) continue;
             SpawnWall(cell, Quaternion.Euler(0, -90, 0));
         }
 
@@ -265,51 +293,51 @@ public class PlacementSystem : MonoBehaviour
     }
 
     private void SpawnTraySpawners()
-{
-    foreach (var spawnerData in currentMap.Spawners)
     {
-        Vector3 worldPos = grid.CellToWorld(spawnerData.position);
-        GameObject spawnerGO = Instantiate(
-            spawnerData.traySpawnerPrefab,
-            worldPos,
-            Quaternion.identity,
-            gridParent);
-
-        if (spawnerGO.TryGetComponent(out TraySpawner traySpawner))
+        foreach (var spawnerData in currentMap.Spawners)
         {
-            traySpawner.SetDirection(spawnerData.direction);
-            traySpawner.SetTrayList(spawnerData.TraysToSpawn);
-            traySpawners.Add(traySpawner);
+            Vector3 worldPos = grid.CellToWorld(spawnerData.position);
+            GameObject spawnerGO = Instantiate(
+                spawnerData.traySpawnerPrefab,
+                worldPos,
+                Quaternion.identity,
+                gridParent);
 
-                var pivot = traySpawner.visual;
-            if (pivot != null)
+            if (spawnerGO.TryGetComponent(out TraySpawner traySpawner))
             {
-                switch (spawnerData.direction)
+                traySpawner.SetDirection(spawnerData.direction);
+                traySpawner.SetTrayList(spawnerData.TraysToSpawn);
+                traySpawners.Add(traySpawner);
+
+                    var pivot = traySpawner.visual;
+                if (pivot != null)
                 {
-                    case SpawningDirection.Left:
-                        pivot.localPosition = new Vector3(0.25f, 0f, 0.5f);
-                        pivot.localRotation = Quaternion.Euler(0f, -90f, 0f);
-                        break;
+                    switch (spawnerData.direction)
+                    {
+                        case SpawningDirection.Left:
+                            pivot.localPosition = new Vector3(0.25f, 0f, 0.5f);
+                            pivot.localRotation = Quaternion.Euler(0f, -90f, 0f);
+                            break;
 
-                    case SpawningDirection.Up:
-                        pivot.localPosition = new Vector3(0.5f, 0f, 0.75f);
-                        pivot.localRotation = Quaternion.Euler(0f, 0f, 0f);
-                        break;
+                        case SpawningDirection.Up:
+                            pivot.localPosition = new Vector3(0.5f, 0f, 0.75f);
+                            pivot.localRotation = Quaternion.Euler(0f, 0f, 0f);
+                            break;
 
-                    case SpawningDirection.Right:
-                        pivot.localPosition = new Vector3(0.75f, 0f, 0.5f);
-                        pivot.localRotation = Quaternion.Euler(0f, 90f, 0f);
-                        break;
+                        case SpawningDirection.Right:
+                            pivot.localPosition = new Vector3(0.75f, 0f, 0.5f);
+                            pivot.localRotation = Quaternion.Euler(0f, 90f, 0f);
+                            break;
 
-                    case SpawningDirection.Down:
-                        pivot.localPosition = new Vector3(0.5f, 0f, 0.25f);
-                        pivot.localRotation = Quaternion.Euler(0f, 180f, 0f);
-                        break;
+                        case SpawningDirection.Down:
+                            pivot.localPosition = new Vector3(0.5f, 0f, 0.25f);
+                            pivot.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                            break;
+                    }
                 }
-            }
-            }
+                }
+        }
     }
-}
 
     public List<Vector3Int> GetCellsToCheck(Vector3Int spawnerPos, Vector2Int traySize, SpawningDirection direction)
     {
@@ -330,8 +358,6 @@ public class PlacementSystem : MonoBehaviour
 
         return positions;
     }
-
-
 
     #endregion
 
@@ -475,13 +501,11 @@ public class PlacementSystem : MonoBehaviour
         }
     }
 
-
     public bool CanSpawnTrayAt(Vector3Int spawnerPos, Vector2Int traySize, SpawningDirection direction)
     {
         var checkPositions = GetCellsToCheck(spawnerPos, traySize, direction);
         return checkPositions.All(pos => IsCellAvailable(pos));
     }
-
 
     public Vector3Int GetTraySpawnPosition(Vector3Int spawnerPos, Vector2Int traySize, SpawningDirection direction)
     {
@@ -495,23 +519,63 @@ public class PlacementSystem : MonoBehaviour
         };
     }
 
-    private void DistributeFoodToTrays(Dictionary<Tray, List<ItemColorType>> foodMap)
-    {
-        foreach (var kvp in foodMap)
-        {
-            Tray tray = kvp.Key;
-            List<ItemColorType> foodList = kvp.Value;
-
-            tray.SpawnFromColorList(foodList);
-        }
-    }
-
     public void RegisterTray(Tray tray)
     {
         if (!activeTrays.Contains(tray))
         {
             activeTrays.Add(tray);
         }
+    }
+
+    public bool CanTrayFitAtCell(Tray tray, Vector3Int cellPos)
+    {
+        // Bounds check for the tray anchor
+        if (!IsCellInBounds(cellPos))
+            return false;
+
+        // Get all cells this tray would occupy at that position
+        foreach (var cell in tray.GetOccupiedCells(cellPos))
+        {
+            if (!IsCellInBounds(cell))
+                return false;
+
+            // If this cell is occupied by something else, block it
+            if (!IsCellAvailable(cell, tray))
+                return false;
+        }
+
+        return true;
+    }
+
+    #endregion
+
+    #region Camera Setting
+    public void SnapCameraToCenter()
+    {
+        Camera cam = Camera.main;
+        if (!cam) return;
+
+        Vector2Int size = currentMap.GridSize;
+        int width = size.x;
+        int height = size.y; // if needed later, same rules apply
+
+        //x center
+        float centerX = (width % 2 == 0) ? 0f : 0.5f;
+
+        //z center
+        float centerZ = -(width * 0.5f);
+
+        //y unchanged
+        float centerY = cam.transform.position.y;
+
+        cam.transform.position = new Vector3(centerX, centerY, centerZ);
+
+        //orthographic size
+        cam.orthographicSize = width + 0.75f;
+
+        //camera rotation
+        float rotationX = 90f - (width * 3.25f);
+        cam.transform.rotation = Quaternion.Euler(rotationX, 0f, 0f);
     }
 
     #endregion
