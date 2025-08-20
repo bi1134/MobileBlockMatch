@@ -466,43 +466,26 @@ public class Tray : GridObjects
 
         var t1 = fromMe.transform;
         var t2 = fromThem.transform;
-
         if (t1 == null || t2 == null) return DOTween.Sequence();
 
+        // Start & target positions
         Vector3 t1Start = t1.position;
         Vector3 t2Start = t2.position;
         Vector3 t1Target = t2Start;
         Vector3 t2Target = t1Start;
 
         float totalDuration = 0.6f;
-        float dipOffset = 0.15f;
         float jumpHeight = 0.6f;
 
         var seq = DOTween.Sequence();
 
-        //t1 animation
-        var t1Seq = DOTween.Sequence();
-        t1Seq.Append(t1.DOMoveY(t1Start.y - dipOffset, totalDuration * 0.15f).SetEase(Ease.OutQuad)); // dip down
-        t1Seq.Append(t1.DOMove(new Vector3(t1Target.x, t1Target.y + jumpHeight, t1Target.z), totalDuration * 0.4f).SetEase(Ease.OutCubic)); // jump peak
-        t1Seq.Append(t1.DOMoveY(t1Target.y - dipOffset, totalDuration * 0.25f).SetEase(Ease.InCubic)); // land overshoot
-        t1Seq.Append(t1.DOMoveY(t1Target.y, totalDuration * 0.2f).SetEase(Ease.OutBack)); // settle
+        // Animate both foods
+        var t1Seq = AnimateFoodJump(t1, t1Start, t1Target, totalDuration, jumpHeight);
+        var t2Seq = AnimateFoodJump(t2, t2Start, t2Target, totalDuration, jumpHeight);
 
-        //t2 animation
-        var t2Seq = DOTween.Sequence();
-        t2Seq.Append(t2.DOMoveY(t2Start.y - dipOffset, totalDuration * 0.15f).SetEase(Ease.OutQuad));
-        t2Seq.Append(t2.DOMove(new Vector3(t2Target.x, t2Target.y + jumpHeight, t2Target.z), totalDuration * 0.4f).SetEase(Ease.OutCubic));
-        t2Seq.Append(t2.DOMoveY(t2Target.y - dipOffset, totalDuration * 0.25f).SetEase(Ease.InCubic));
-        t2Seq.Append(t2.DOMoveY(t2Target.y, totalDuration * 0.2f).SetEase(Ease.OutBack));
+        seq.Join(t1Seq).Join(t2Seq);
 
-        //squash effect
-        Tween t1Scale = t1.DOScaleY(1.4f, totalDuration * 0.25f).SetEase(Ease.OutBack)
-            .OnComplete(() => t1.DOScaleY(1, totalDuration * 0.25f).SetEase(Ease.InOutBack));
-        Tween t2Scale = t2.DOScaleY(1.4f, totalDuration * 0.25f).SetEase(Ease.OutBack)
-            .OnComplete(() => t2.DOScaleY(1, totalDuration * 0.25f).SetEase(Ease.InOutBack));
-
-        seq.Join(t1Seq).Join(t2Seq).Join(t1Scale).Join(t2Scale);
-
-        float eventTime = totalDuration * 0.15f; // when jump starts (after dip)
+        float eventTime = totalDuration * 0.15f;
         seq.InsertCallback(eventTime, () =>
         {
             if (me == null || other == null || me.isFinishing || other.isFinishing)
@@ -510,14 +493,16 @@ public class Tray : GridObjects
             SoundEventManager.OnAnyFoodSwap?.Invoke(this, EventArgs.Empty);
         });
 
+        // On complete, snap positions and re-parent
         seq.OnComplete(() =>
         {
             if (me == null || other == null || me.isFinishing || other.isFinishing)
                 return;
+
             t1.SetParent(other.foodGrid.transform, true);
             t2.SetParent(me.foodGrid.transform, true);
 
-            //snap position to grid
+            // snap to nearest cell in each tray's grid
             Vector3Int t1Cell = other.foodGrid.WorldToCell(t1Target);
             Vector3Int t2Cell = me.foodGrid.WorldToCell(t2Target);
 
@@ -527,6 +512,39 @@ public class Tray : GridObjects
             other.activeFoods.Add(fromMe);
             me.activeFoods.Add(fromThem);
         });
+
+        return seq;
+    }
+
+    private Sequence AnimateFoodJump(Transform t, Vector3 start, Vector3 target, float totalDuration, float jumpHeight)
+    {
+        var seq = DOTween.Sequence();
+        float dipTime = totalDuration * 0.15f;
+        float jumpTime = totalDuration * 0.55f;
+        float landTime = totalDuration * 0.3f;
+
+        // Step 1: Dip back a little in Z
+        Vector3 dipPos = start + new Vector3(0f, 0f, -0.2f);
+        seq.Append(t.DOMove(dipPos, dipTime).SetEase(Ease.OutQuad));
+
+        // Step 2 & 3: Parabolic arc (Y + Z bump)
+        Vector3 mid = (start + target) / 2f;
+        mid.y += jumpHeight;
+        mid.z += jumpHeight * 2; // push forward on Z axis during jump
+
+        seq.Append(DOTween.To(
+            () => 0f,
+            x =>
+            {
+                // quadratic bezier: start -> mid -> target
+                Vector3 pos = Mathf.Pow(1 - x, 2) * start +
+                              2 * (1 - x) * x * mid +
+                              Mathf.Pow(x, 2) * target;
+                t.position = pos;
+            },
+            1f, jumpTime
+        ).SetEase(Ease.OutBack));
+
 
         return seq;
     }
