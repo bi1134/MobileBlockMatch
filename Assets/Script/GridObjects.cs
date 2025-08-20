@@ -6,7 +6,7 @@ public class GridObjects : MonoBehaviour
     [SerializeField] protected Vector2Int size = Vector2Int.one;
     [SerializeField] public Vector3Int currentGridPos;
     public Vector3Int GetGridPosition() => currentGridPos;
-    protected PlacementSystem placementSystem;
+    public PlacementSystem placementSystem;
 
     protected virtual void Start()
     {
@@ -39,13 +39,13 @@ public class GridObjects : MonoBehaviour
     }
 
 
-    protected void RegisterSelf()
+    public void RegisterSelf()
     {
         foreach (var cell in GetOccupiedCells(currentGridPos))
             placementSystem.RegisterGridObject(cell, this);
     }
 
-    protected void UnregisterSelf()
+    public void UnregisterSelf()
     {
         foreach (var cell in GetOccupiedCells(currentGridPos))
             placementSystem.UnregisterGridObject(cell);

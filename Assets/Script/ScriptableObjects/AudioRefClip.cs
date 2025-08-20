@@ -7,6 +7,7 @@ public class AudioRefClip : ScriptableObject
     public AudioClip[] trayPickup;
     public AudioClip[] trayDrop;
     public AudioClip[] traySpawn;
+    public AudioClip[] trayFinished;
 
     [Sirenix.OdinInspector.Title("Items sounds")]
     public AudioClip[] itemMove;

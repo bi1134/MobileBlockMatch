@@ -15,8 +15,8 @@ public class Tray : GridObjects
     [Header("References")]
     [SerializeField] public TrayVisual visual;
     [SerializeField] private TrayShapeData shapeData;
-    [SerializeField] private Grid foodGrid;
-    [SerializeField] private List<FoodData> foodTheme;
+    [SerializeField] public Grid foodGrid;
+    [SerializeField] public List<FoodData> foodTheme;
 
     public List<Food> activeFoods = new();
     public Vector3Int localPosition;
@@ -59,12 +59,6 @@ public class Tray : GridObjects
             {
             });
         }
-    }
-
-    private void DestroyAfterVisual()
-    {
-        visual.ResetVisual();
-        gameObject.SetActive(false);
     }
 
     #endregion
@@ -152,56 +146,8 @@ public class Tray : GridObjects
     #region Food Item handling
     public void SpawnFromColorList(List<ItemColorType> colors)
     {
-        if (foodGrid == null || foodTheme == null || shapeData == null) return;
-
-        var positions = GetFoodGridPositions();
-        int spawned = 0;
-
-        foreach (var color in colors)
-        {
-            if (spawned >= positions.Count) break;
-
-            var data = foodTheme.Find(fd => fd.color == color);
-            if (data == null) continue;
-
-            var cell = positions[spawned];
-            SpawnFood(cell, data);
-            spawned++;
-        }
+        TrayFoodSpawner.SpawnFromColorList(this, colors);
     }
-
-    private void SpawnFood(Vector3Int localCell, FoodData data)
-    {
-        var pos = foodGrid.CellToWorld(localCell);
-        var foodGO = Instantiate(data.prefab, pos, Quaternion.identity, foodGrid.transform);
-
-        if (foodGO.TryGetComponent(out Food food))
-        {
-            food.Initialize(data);
-            activeFoods.Add(food);
-        }
-        else
-        {
-            Debug.LogWarning($"Spawned object {data.prefab.name} has no Food component!");
-        }
-    }
-
-    private List<Vector3Int> GetFoodGridPositions()
-    {
-        var result = new List<Vector3Int>();
-        var size = shapeData.Size * 2;
-
-        for (int x = 0; x < size.x; x++)
-            for (int z = 0; z < size.y; z++)
-            {
-                Vector2Int trayOffset = new(x / 2, z / 2);
-                if (!HasExcludedOffset(trayOffset))
-                    result.Add(new Vector3Int(x, 0, z));
-            }
-
-        return result;
-    }
-
     public List<Food> GetAllFoods()
     {
         var result = new List<Food>();
@@ -212,7 +158,7 @@ public class Tray : GridObjects
         return result;
     }
 
-    private void SyncActiveFoods()
+    public void SyncActiveFoods()
     {
         activeFoods.Clear();
         activeFoods.AddRange(GetAllFoods());
@@ -422,32 +368,7 @@ public class Tray : GridObjects
         if (!IsUnlocked() || foodGrid == null || visual == null || !gameObject.activeInHierarchy || isFinishing || isSwapping)
             return;
 
-        // Delay completion until end of frame to avoid finishing during swap handling
-        StartCoroutine(DelayedCompletionCheck());
-    }
-
-    private IEnumerator DelayedCompletionCheck()
-    {
-        yield return new WaitForEndOfFrame(); // ensure any perfor swap has completed
-
-        if (isSwapping || isFinishing) yield break;
-
-        int total = activeFoods.Count;
-        int matching = activeFoods.Count(f => f != null && f.Color == shapeData.trayColor);
-
-        if (total > 0 && total == matching)
-        {
-            isFinishing = true;
-            isBeingDestroyed = true;
-            this.enabled = false;
-            // no tween kill until food positions have fully settled
-            yield return new WaitForSeconds(0.2f);
-            KillAllTweens();
-            placementSystem.AllPlannedTrays.Remove(this);
-            UnregisterSelf();
-            visual.DestroyGoesUp(() => DestroyAfterVisual());
-            GameEventManager.OnTrayFinished?.Invoke(this, EventArgs.Empty);
-        }
+        StartCoroutine(TrayFinishQueue.DelayedCompletionCheck(this));
     }
 
     private List<Food> GetWrongFoods(Tray tray)
@@ -564,7 +485,7 @@ public class Tray : GridObjects
             .ToList();
     }
 
-    private void KillAllTweens()
+    public void KillAllTweens()
     {
         if (isSwapping) return;
         foreach (var food in activeFoods)

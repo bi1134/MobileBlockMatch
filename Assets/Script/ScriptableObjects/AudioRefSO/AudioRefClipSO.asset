@@ -18,6 +18,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: fb777702c71b9574098138a3173b7f91, type: 3}
   traySpawn:
   - {fileID: 8300000, guid: b2abe18c6e216f64787aa88489427a5e, type: 3}
+  trayFinished:
+  - {fileID: 8300000, guid: fdd8608b72ed3ce4f9713323187e509b, type: 3}
   itemMove:
   - {fileID: 8300000, guid: 0d3224389cbbe9a458dff2fd8e10a8b6, type: 3}
   buttonClick:

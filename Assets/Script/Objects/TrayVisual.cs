@@ -38,8 +38,6 @@ public class TrayVisual : MonoBehaviour
 
     public void DestroyGoesUp(Action onComplete = null)
     {
-        ShakeScale();
-
         Sequence seq = DOTween.Sequence();
 
         Vector3 originalScale = transform.localScale;
