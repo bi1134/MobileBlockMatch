@@ -39,7 +39,6 @@ public class BlockedTray : Tray
         }
     }
 
-
     private void UpdateVisual()
     {
         if (visual == null) return;
@@ -53,7 +52,6 @@ public class BlockedTray : Tray
         if (grid != null)
             grid.gameObject.SetActive(unlocked);
     }
-
 
     private void TrySpawnRemainingFood()
     {

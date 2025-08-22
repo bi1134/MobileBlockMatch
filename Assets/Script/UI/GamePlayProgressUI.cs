@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class GamePlayProgressUI : MonoBehaviour
 {
     [SerializeField] private Image moveCountImage;
+    [SerializeField] private Image moveCountImageRed;
     [SerializeField] private TextMeshProUGUI moveCount;
 
     private void OnEnable()
@@ -31,6 +32,11 @@ public class GamePlayProgressUI : MonoBehaviour
     {
         moveCount.text = e.moveCount.ToString();
         moveCountImage.fillAmount = e.progressNormalized;
+        moveCountImageRed.fillAmount = e.progressNormalized;
+        if(moveCountImage.fillAmount == (float)25%1)
+        {
+            moveCountImage.color = new Color(0,0,0,0); //set alpha to 0
+        }
     }
 
     private void ResetSignal()

@@ -20,7 +20,20 @@ MonoBehaviour:
   - {fileID: 8300000, guid: b2abe18c6e216f64787aa88489427a5e, type: 3}
   trayFinished:
   - {fileID: 8300000, guid: fdd8608b72ed3ce4f9713323187e509b, type: 3}
+  trayGoesOut:
+  - {fileID: 8300000, guid: 0ad7cef4d62c0134e85110c8f347381c, type: 3}
+  trayBlocked:
+  - {fileID: 8300000, guid: 4df260f9d9cf8c7439b8f2bec46685a0, type: 3}
   itemMove:
   - {fileID: 8300000, guid: 0d3224389cbbe9a458dff2fd8e10a8b6, type: 3}
   buttonClick:
   - {fileID: 8300000, guid: d544bf734d0e4974bb3f498538bcbf5b, type: 3}
+  gameResultWin:
+  - {fileID: 8300000, guid: 5be8efae3cda628479bf9ed57ca4a6cf, type: 3}
+  gameResultLose:
+  - {fileID: 8300000, guid: 381cc541261bd7148a0afbd9b8591484, type: 3}
+  gameCombo:
+  - {fileID: 8300000, guid: 501b95dcc722fdd40a58a58fbf980949, type: 3}
+  - {fileID: 8300000, guid: 2ca716764a2f452488fbb6b7dc168f7d, type: 3}
+  - {fileID: 8300000, guid: 304b122fb52ed304b821c0b30461e021, type: 3}
+  - {fileID: 8300000, guid: 0af5e01e1b10ec8458eae28f5e79e2ac, type: 3}

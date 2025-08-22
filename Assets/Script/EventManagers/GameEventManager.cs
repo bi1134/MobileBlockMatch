@@ -8,6 +8,7 @@ public class GameEventManager
 
     //tray
     public static EventHandler OnTrayFinished;
+    public static EventHandler OnTrayGoesOut;
 
 
     public static event EventHandler<OnProgressChangedEventArgs> OnProgressChanged;

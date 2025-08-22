@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
 
 public class GameManager : MonoBehaviour
 {
@@ -19,7 +20,8 @@ public class GameManager : MonoBehaviour
 
     public int FinishedTrayCount => finishedTrayCount;
 
-    [field: SerializeField]public GameState CurrentState { get; private set; }
+    public GameState CurrentState { get; private set; }
+    private GameState previousState;
     private float winLoseCheckDelayTime = 1f;
     [SerializeField] private float winLoseCheckTimer = 0f;
     [SerializeField]private bool shouldCheckWinLose = false;
@@ -44,7 +46,7 @@ public class GameManager : MonoBehaviour
         Instance = this;
         GameEventManager.OnTrayFinished += HandleTrayFinished;
         winLoseChecker = new WinLoseChecker();
-        comboChecker = new ComboChecker(1f); // 0.5 seconds combo time limit
+        comboChecker = new ComboChecker(2f); // 2 seconds combo time limit
 
         Application.targetFrameRate = 60; // Set target frame rate to 60 FPS
 
@@ -122,7 +124,6 @@ public class GameManager : MonoBehaviour
     {
         if (winLoseChecker.IsWin(totalTrayCount))
         {
-            Debug.Log("All trays finished! WIN");
             SetGameState(GameState.Win);
             return;
         }
@@ -157,15 +158,14 @@ public class GameManager : MonoBehaviour
         Debug.Log($"remaining trays: {totalTrayCount}");
     }
 
-    public void SetGameState(GameState gameState)
+    public void SetGameState(GameState newState)
     {
-        if (CurrentState == GameState.Win && gameState == GameState.GameOver)
+        if (newState == GameState.Pausing)
         {
-            Debug.Log("Ignoring GameOver because game already won.");
-            return;
+            previousState = CurrentState; // store where we came from
         }
 
-        CurrentState = gameState;
+        CurrentState = newState;
         GameEventManager.OnGameStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -177,6 +177,12 @@ public class GameManager : MonoBehaviour
         finishedTrayCount = 0;
         SetGameState(GameState.WaitingToStart);
         BlockedTrayFoodMap.Clear();
+    }
+
+    public void ResumeFromPause()
+    {
+        // Go back to where we were
+        SetGameState(previousState);
     }
 
     public bool IsGamePlaying()
@@ -205,6 +211,7 @@ public enum GameState
 {
     WaitingToStart,
     Starting,
+    Pausing,
     Playing,
     GameOver,
     Win

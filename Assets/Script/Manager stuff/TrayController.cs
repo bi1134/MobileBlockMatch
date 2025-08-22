@@ -124,9 +124,16 @@ public class TrayController : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, trayLayer))
         {
             Tray tray = hit.collider.GetComponent<Tray>();
-            if (tray != null && tray.IsUnlocked() && !tray.IsBusy())
+            if (tray != null && !tray.IsBusy())
             {
-                BeginDrag(tray);
+                if(tray.IsUnlocked())
+                {
+                    BeginDrag(tray);
+                }
+                else
+                {
+                    SoundEventManager.OnTryPickupBlocked?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
     }
@@ -136,6 +143,8 @@ public class TrayController : MonoBehaviour
         selectedTray = tray;
         isDragging = true;
         dragOffset = inputManager.GetSelectedMapPosition() - selectedTray.transform.position;
+        selectedTray.visual.IsShowOutLine(true);
+
 
         limitOriginCell = tray.currentGridPos;
         (maxMoveLeft, maxMoveRight, maxMoveUp, maxMoveDown) =
@@ -229,6 +238,7 @@ public class TrayController : MonoBehaviour
         if (selectedTray != null)
         {
             selectedTray.OnDrop();
+            selectedTray.visual.IsShowOutLine(false);
             selectedTray = null;
         }
         isDragging = false;

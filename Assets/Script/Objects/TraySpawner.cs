@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,6 +33,7 @@ public class TraySpawner : GridObjects
             return;
         }
 
+        SoundEventManager.OnAnyTraySpawner?.Invoke(this, EventArgs.Empty);
         Debug.Log($"Spawning {prefab.name} at {spawnerGridPos} toward {spawnDirection}");
 
         Vector3Int spawnPos = PlacementSystem.Instance.GetTraySpawnPosition(spawnerGridPos, traySize, spawnDirection);
@@ -40,11 +42,14 @@ public class TraySpawner : GridObjects
 
         if (trayGO.TryGetComponent(out Tray newTray))
         {
+            newTray.visual.SetSpawnDirection(ToVector3Int(spawnDirection));
             newTray.ApplyFoodSet(PlacementSystem.Instance.currentMap.ActiveFoodTheme);
             PlacementSystem.Instance.RegisterTray(newTray);
-            tray.currentGridPos = gridPos;
-            tray.originalGridPos = gridPos;
-            tray.lastValidGridPos = gridPos;
+            newTray.currentGridPos = gridPos;
+            newTray.originalGridPos = gridPos;
+            newTray.lastValidGridPos = gridPos;
+
+
             //Use the exact TrayPlacementData that was planned
             var foodList = FindPlannedFood(trayData);
             if (foodList != null)
@@ -108,40 +113,17 @@ public class TraySpawner : GridObjects
         }
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    public Vector3Int ToVector3Int(SpawningDirection dir)
     {
-        if (trayPrefabsToSpawn == null || spawnIndex >= trayPrefabsToSpawn.Count)
-            return;
-
-        GameObject nextPrefab = trayPrefabsToSpawn[spawnIndex];
-        if (!nextPrefab.TryGetComponent(out Tray tray)) return;
-
-        TrayShapeData shape = tray.GetShapeData();
-        Vector2Int traySize = shape.Size * 2;
-
-        Vector3Int spawnerGridPos = PlacementSystem.Instance.grid.WorldToCell(transform.position);
-        var cells = PlacementSystem.Instance.GetCellsToCheck(spawnerGridPos, traySize, spawnDirection);
-
-        bool canSpawn = true;
-        foreach (var cell in cells)
+        switch (dir)
         {
-            if (!PlacementSystem.Instance.IsCellAvailable(cell))
-            {
-                canSpawn = false;
-                break;
-            }
-        }
-
-        Gizmos.color = canSpawn ? Color.green : Color.red;
-
-        foreach (var cell in cells)
-        {
-            Vector3 worldPos = PlacementSystem.Instance.grid.CellToWorld(cell) + new Vector3(0.5f, 0.1f, 0.5f);
-            Gizmos.DrawCube(worldPos, new Vector3(0.9f, 0.1f, 0.9f));
+            case SpawningDirection.Left: return new Vector3Int(-1, 0, 0);
+            case SpawningDirection.Right: return new Vector3Int(1, 0, 0);
+            case SpawningDirection.Up: return new Vector3Int(0, 0, 1);
+            case SpawningDirection.Down: return new Vector3Int(0, 0, -1);
+            default: return Vector3Int.zero;
         }
     }
-#endif
 }
 
 public enum SpawningDirection

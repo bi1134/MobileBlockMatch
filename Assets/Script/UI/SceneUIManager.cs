@@ -20,11 +20,13 @@ public class SceneUIManager : MonoBehaviour
             case GameState.WaitingToStart:
                 gameStartingUI.SetActive(true);
                 gameResultUI.SetActive(false);
+                gameSettingUI.SetActive(false);
                 // gamePlayingProcessUI stays active, but maybe dim it if needed
                 break;
             case GameState.Playing:
                 gameStartingUI.SetActive(false);
                 gameResultUI.SetActive(false);
+                gameSettingUI.SetActive(false);
                 gamePlayingProcessUI.SetActive(true); // stays visible
                 break;
 
@@ -32,6 +34,10 @@ public class SceneUIManager : MonoBehaviour
             case GameState.Win:
                 gameResultUI.SetActive(true);
                 // gamePlayingProcessUI still stays active here
+                break;
+
+            case GameState.Pausing:
+                gameSettingUI.SetActive(true);
                 break;
 
             default:
@@ -46,15 +52,19 @@ public class SceneUIManager : MonoBehaviour
     {
         gameStartingUI.SetActive(false);
         gameResultUI.SetActive(false);
+        gameSettingUI.SetActive(false);
     }
 
     public void ShowSettingUI()
     {
-        gameSettingUI.SetActive(true);
+        SoundEventManager.OnAnyButtonClicked?.Invoke(this, EventArgs.Empty);
+        GameManager.Instance.SetGameState(GameState.Pausing);
     }
 
     public void HideSettingUI()
     {
+        SoundEventManager.OnAnyButtonClicked?.Invoke(this, EventArgs.Empty);
+        GameManager.Instance.ResumeFromPause();
         gameSettingUI.SetActive(false);
     }
 

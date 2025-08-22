@@ -40,7 +40,7 @@ public class PlacementSystem : MonoBehaviour
         LoadMap();
     }
 
-    public void ContiueMap()
+    public void ContinueMap()
     {
         currentMapIndex++;
         if(currentMapIndex > currentMapGrid.Count() - 1 )
@@ -335,7 +335,7 @@ public class PlacementSystem : MonoBehaviour
                             break;
                     }
                 }
-                }
+            }
         }
     }
 

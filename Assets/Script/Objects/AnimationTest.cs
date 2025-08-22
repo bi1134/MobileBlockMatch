@@ -35,11 +35,11 @@ public class AnimationTest : MonoBehaviour
     {
         transform.DOScale(Vector3.one, .5f).SetEase(Ease.OutBack);
 
-        transform.DOMoveY(2, 5)
-            .SetEase(Ease.Linear);
+        transform.DOMoveY(2, 1)
+            .SetEase(Ease.OutExpo);
 
-        transform.DOMoveZ(2, 5)
-            .SetEase(Ease.Linear);
+        transform.DOMoveZ(2, 1)
+            .SetEase(Ease.OutExpo);
     }
 
     public void ResetVisual()

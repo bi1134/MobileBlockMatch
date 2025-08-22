@@ -39,7 +39,7 @@ public class GameResultUI : MonoBehaviour
     public void ContinueButton()
     {
         SoundEventManager.OnAnyButtonClicked?.Invoke(this, System.EventArgs.Empty);
-        PlacementSystem.Instance.ContiueMap();
+        PlacementSystem.Instance.ContinueMap();
     }
 
 }
