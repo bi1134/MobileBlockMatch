@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System;
 using UnityEngine;
 
@@ -32,7 +33,26 @@ public class BlockedTray : Tray
         {
             unlocked = true;
             Debug.Log($"{gameObject.name} is now unlocked!");
-            UpdateVisual();
+            if (blockedTrayMesh != null)
+            {
+                blockedTrayMesh.transform.DOScale(Vector3.one * 1.25f, 0.15f) // quick scale up
+                    .SetEase(Ease.OutBack)
+                    .OnComplete(() =>
+                    {
+                        GameEventManager.OnBlockedTrayFinished?.Invoke(this, EventArgs.Empty);
+                        blockedTrayMesh.transform.DOShakeScale(0.1f, 0.35f) // shrink explode
+                            .SetEase(Ease.InBack)
+                            .OnComplete(() =>
+                            {
+                                blockedTrayMesh.SetActive(false); // finally hide
+                                UpdateVisual(); // will show normal tray + grid
+                            });
+                    });
+            }
+            else
+            {
+                UpdateVisual();
+            }
 
             TrySpawnRemainingFood();
             CheckAndStartSwap(null);
@@ -44,7 +64,11 @@ public class BlockedTray : Tray
         if (visual == null) return;
 
         // Show/hide based on unlock status
-        if (normalTrayMesh) normalTrayMesh.SetActive(unlocked);
+        if (normalTrayMesh)
+        {
+            normalTrayMesh.SetActive(unlocked);
+        }
+
         if (blockedTrayMesh) blockedTrayMesh.SetActive(!unlocked);
 
         // Also hide grid (so food is invisible)

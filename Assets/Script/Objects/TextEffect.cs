@@ -27,7 +27,7 @@ public class TextEffect : MonoBehaviour
         transform.DOMoveY(1.5f, 0.6f)
             .SetEase(Ease.OutExpo);
 
-        transform.DOMoveZ(transform.position.z + 2, 1)
+        transform.DOMoveZ(transform.position.z + 1.75f, 1)
             .SetEase(Ease.OutExpo).OnComplete(() => Destroy(transform.parent.gameObject));
 
         spriteRenderer.DOFade(0, 3)

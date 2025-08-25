@@ -12,6 +12,7 @@ public class FoodVisual : MonoBehaviour
     private void Awake()
     {
         originalLocalOffset = transform.localPosition;
+        transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
     }
 
     private void Start()
@@ -28,7 +29,10 @@ public class FoodVisual : MonoBehaviour
 
     public void Drop()
     {
-        this.transform.DOLocalMove(originalLocalOffset, 0.25f)
-            .SetEase(Ease.OutBounce);
+        Sequence seq = DOTween.Sequence();
+        
+        seq.Append(this.transform.DOScale(Vector3.one, 0.15f).SetEase(Ease.OutBack));
+        seq.Append(transform.DOLocalMove(originalLocalOffset, 0.25f)
+            .SetEase(Ease.OutBounce));
     }
 }

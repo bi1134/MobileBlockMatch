@@ -17,3 +17,7 @@ MonoBehaviour:
   - {fileID: 4423550163971402371, guid: f5df27dc937de3b4c8d5125d9147aee6, type: 3}
   - {fileID: 4423550163971402371, guid: 2d14fa6ffc4cc0e49aca8af75cf54c80, type: 3}
   - {fileID: 4423550163971402371, guid: 6ffac496f7f008643bc92c745183fc35, type: 3}
+  boxDestroy:
+  - {fileID: 1198724786340194, guid: 817a445280f5fca4c9e8434710d7b46b, type: 3}
+  trayFinised:
+  - {fileID: 1887589919947958, guid: 1d45397251c038446942a977ab216d6e, type: 3}

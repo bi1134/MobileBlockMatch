@@ -2,7 +2,6 @@ using UnityEngine;
 using DG.Tweening;
 using System.Collections;
 using System;
-using Google.Apis.Drive.v3.Data;
 
 public class TrayVisual : MonoBehaviour
 {
@@ -54,10 +53,10 @@ public class TrayVisual : MonoBehaviour
         else if (mode == SpawnMode.FromSpawner)
         {
             Vector3 aboveTarget = originalLocalOffset + Vector3.up * 0.5f;
-
             seq.Append(transform.DOLocalMove(originalLocalOffset, 0.15f).SetEase(Ease.OutExpo));
             seq.Append(transform.DOLocalMove(aboveTarget, 0.25f).SetEase(Ease.OutCubic));
-
+            seq.Append(transform.DOLocalMove(originalLocalOffset, 0.25f)
+            .SetEase(Ease.InBounce));
             seq.Join(transform.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack));
         }
 

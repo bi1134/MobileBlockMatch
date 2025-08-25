@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +40,6 @@ public class PlacementSystem : MonoBehaviour
     {
         LoadMap();
     }
-
     public void ContinueMap()
     {
         currentMapIndex++;
@@ -118,6 +118,10 @@ public class PlacementSystem : MonoBehaviour
     public void UnregisterGridObject(Vector3Int gridPos)
     {
         occupiedCells.Remove(gridPos);
+        if (AllPlannedTrays.Count <= 0)
+        {
+            GameEventManager.OnLastTray?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     public bool IsCellAvailable(Vector3Int cell, GridObjects requestingObj = null)

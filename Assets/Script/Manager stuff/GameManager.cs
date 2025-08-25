@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     private int finishedTrayCount;
 
     public int currentMoveCount = 0;
-    private int maxMoveCount = 10; // default value, can be set from map config
+    public int maxMoveCount = 10; // default value, can be set from map config
 
     private float waitingToStartTimer = 1f;
 
@@ -40,6 +40,8 @@ public class GameManager : MonoBehaviour
     private float[] frameDeltaTimeArray;
 
     [SerializeField] private TextMeshProUGUI fpsString;
+
+    private bool firstLoad = true;
 
     private void Awake()
     {
@@ -175,7 +177,18 @@ public class GameManager : MonoBehaviour
         currentMoveCount = maxMoveCount;
         GameEventManager.VisualProgressChanged(this, currentMoveCount / (float)maxMoveCount, currentMoveCount);
         finishedTrayCount = 0;
-        SetGameState(GameState.WaitingToStart);
+
+        //first load check
+        if (firstLoad)
+        {
+            SetGameState(GameState.WaitingToStart);
+            firstLoad = false;
+        }
+        else
+        {
+            SetGameState(GameState.Starting);
+        }
+
         BlockedTrayFoodMap.Clear();
     }
 

@@ -1,4 +1,3 @@
-using Unity.Burst.Intrinsics;
 using UnityEngine;
 
 public class SoundManager : MonoBehaviour
@@ -37,7 +36,7 @@ public class SoundManager : MonoBehaviour
 
     private void Tray_OnAnyTrayGoesOut(object sender, System.EventArgs e)
     {
-        PlaySound(audioClipRefsSO.trayGoesOut);
+        PlaySound(audioClipRefsSO.trayGoesOut, 0.5f);
     }
 
     private void Tray_OnTryPickupBlocked(object sender, System.EventArgs e)
@@ -64,16 +63,13 @@ public class SoundManager : MonoBehaviour
     #region Game Sound
     private void Game_OnResultSound(object sender, System.EventArgs e)
     {
-        if(GameManager.Instance.IsGameEnd())
+        if(GameManager.Instance.IsGameWin())
         {
-            if(GameManager.Instance.IsGameWin())
-            {
-                PlaySoundFixed(audioClipRefsSO.gameResultWin[0]);
-            }
-            else
-            {
-                PlaySoundFixed(audioClipRefsSO.gameResultLose[0]);
-            }
+            PlaySoundFixed(audioClipRefsSO.gameResultWin[0]);
+        }
+        else
+        {
+            PlaySoundFixed(audioClipRefsSO.gameResultLose[0]);
         }
     }
 
@@ -140,7 +136,7 @@ public class SoundManager : MonoBehaviour
         SoundEventManager.OnAnyButtonClicked += Button_OnAnyButtonClicked;
 
         //Game ChangeState
-        GameEventManager.OnGameStateChanged += Game_OnResultSound;
+        SoundEventManager.OnGameResultShow += Game_OnResultSound;
 
         //Game Combo
         GameEventManager.OnComboChanged += Game_OnComboChanged;
@@ -161,9 +157,9 @@ public class SoundManager : MonoBehaviour
         
         //ui button
         SoundEventManager.OnAnyButtonClicked -= Button_OnAnyButtonClicked;
-        
+
         //game
-        GameEventManager.OnGameStateChanged -= Game_OnResultSound;
+        SoundEventManager.OnGameResultShow -= Game_OnResultSound;
         GameEventManager.OnComboChanged -= Game_OnComboChanged;
     }
 }

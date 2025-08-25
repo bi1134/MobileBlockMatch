@@ -1,22 +1,53 @@
+using DG.Tweening;
 using UnityEngine;
 
 public class GameResultUI : MonoBehaviour
 {
+    [SerializeField] private GameObject gameResultPanel;
+
     [SerializeField] private GameObject WinPanel;
     [SerializeField] private GameObject LostPanel;
 
-    private void OnEnable()
+    private Vector3 originalScale;
+    private Tween showTween;
+    private Tween hideTween;
+
+    private void Awake()
     {
-        Show();
+        originalScale = gameResultPanel.transform.localScale;
+        gameResultPanel.transform.localScale = Vector3.zero; // start hidden
     }
 
-    private void Hide()
+    public void Hide()
     {
-        gameObject.SetActive(false);
+        // Kill previous tweens
+        hideTween?.Kill();
+
+        // Reverse pop (slightly smaller before vanish)
+        hideTween = gameResultPanel.transform
+            .DOScale(originalScale * 0.75f, 0.25f)
+            .SetEase(Ease.InBack)
+            .OnComplete(() =>
+            {
+                gameObject.SetActive(false); // finally hide
+            });
     }
 
-    private void Show()
+    public void Show()
     {
+        gameObject.SetActive(true);
+
+        // Reset to smaller scale
+        gameResultPanel.transform.localScale = originalScale * 0.75f;
+
+        // Kill if something’s running
+        showTween?.Kill();
+
+        // Main panel pop
+        showTween = gameResultPanel.transform
+            .DOScale(originalScale, 0.4f)
+            .SetEase(Ease.OutBack);
+
         if (GameManager.Instance.IsGameWin())
         {
             WinPanel.SetActive(true);

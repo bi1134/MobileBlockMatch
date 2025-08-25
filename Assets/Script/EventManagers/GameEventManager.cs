@@ -9,6 +9,8 @@ public class GameEventManager
     //tray
     public static EventHandler OnTrayFinished;
     public static EventHandler OnTrayGoesOut;
+    public static EventHandler OnBlockedTrayFinished;
+    public static EventHandler OnLastTray;
 
 
     public static event EventHandler<OnProgressChangedEventArgs> OnProgressChanged;
@@ -23,7 +25,7 @@ public class GameEventManager
         OnProgressChanged?.Invoke(sender, new OnProgressChangedEventArgs
         {
             progressNormalized = progressNormalized,
-            moveCount = moveCount
+            moveCount = moveCount,
         });
     }
 

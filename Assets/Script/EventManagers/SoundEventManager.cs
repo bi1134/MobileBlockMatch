@@ -14,4 +14,7 @@ public class SoundEventManager
     //UI action
     public static EventHandler OnAnyButtonClicked;
 
+    //game action
+    public static EventHandler OnGameResultShow;
+
 }

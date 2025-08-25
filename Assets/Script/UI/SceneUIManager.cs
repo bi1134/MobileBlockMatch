@@ -1,43 +1,50 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class SceneUIManager : MonoBehaviour
 {
     [SerializeField] private GameObject gameStartingUI;
     [SerializeField] private GameObject gamePlayingProcessUI;
-    [SerializeField] private GameObject gameResultUI;
-    [SerializeField] private GameObject gameSettingUI;
+    [SerializeField] private GameResultUI gameResultUI;
+    [SerializeField] private GameSettingUI gameSettingUI;
+    [SerializeField] private GameObject particleUI;
 
     private void Awake()
     {
         GameEventManager.OnGameStateChanged += OnGameStateChanged;
+        GameEventManager.OnLastTray += ShowParticle;
     }
 
     private void OnGameStateChanged(object sender, EventArgs e)
     {
+        particleUI.SetActive(false);
         switch (GameManager.Instance.CurrentState)
         {
             case GameState.WaitingToStart:
                 gameStartingUI.SetActive(true);
-                gameResultUI.SetActive(false);
-                gameSettingUI.SetActive(false);
+                gameResultUI.gameObject.SetActive(false);
+                gameSettingUI.gameObject.SetActive(false);
                 // gamePlayingProcessUI stays active, but maybe dim it if needed
+                break;
+            case GameState.Starting:
+                gamePlayingProcessUI.SetActive(true); // stays visible
                 break;
             case GameState.Playing:
                 gameStartingUI.SetActive(false);
-                gameResultUI.SetActive(false);
-                gameSettingUI.SetActive(false);
-                gamePlayingProcessUI.SetActive(true); // stays visible
+                gameResultUI.Hide();
+                gameSettingUI.gameObject.SetActive(false);
                 break;
 
-            case GameState.GameOver:
             case GameState.Win:
-                gameResultUI.SetActive(true);
+            case GameState.GameOver:
+                SoundEventManager.OnGameResultShow?.Invoke(this, EventArgs.Empty);
+                gameResultUI.Show();
                 // gamePlayingProcessUI still stays active here
                 break;
 
             case GameState.Pausing:
-                gameSettingUI.SetActive(true);
+                gameSettingUI.Show();
                 break;
 
             default:
@@ -51,8 +58,13 @@ public class SceneUIManager : MonoBehaviour
     private void HideAll()
     {
         gameStartingUI.SetActive(false);
-        gameResultUI.SetActive(false);
-        gameSettingUI.SetActive(false);
+        gameResultUI.gameObject.SetActive(false);
+        gameSettingUI.gameObject.SetActive(false);
+    }
+
+    private void ShowParticle(object sender, EventArgs e)
+    {
+        particleUI.SetActive(true);
     }
 
     public void ShowSettingUI()
@@ -65,11 +77,12 @@ public class SceneUIManager : MonoBehaviour
     {
         SoundEventManager.OnAnyButtonClicked?.Invoke(this, EventArgs.Empty);
         GameManager.Instance.ResumeFromPause();
-        gameSettingUI.SetActive(false);
+        gameSettingUI.Hide();
     }
 
     private void OnDestroy()
     {
         GameEventManager.OnGameStateChanged -= OnGameStateChanged;
+        GameEventManager.OnLastTray -= ShowParticle;
     }
 }

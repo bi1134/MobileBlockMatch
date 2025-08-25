@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abe13ef36298e5c429a08bd64af99f87, type: 3}
+  m_Name: level3
+  m_EditorClassIdentifier: 
+  <GridSize>k__BackingField: {x: 4, y: 4}
+  <GridOrigin>k__BackingField: {x: 0, y: 0, z: 0}
+  <MaxMoveCount>k__BackingField: 20
+  <BlockedCells>k__BackingField: []
+  <Trays>k__BackingField:
+  - trayPrefab: {fileID: 4456156309129873927, guid: eacd2ee4dad82ff4ab5330a397c885d3,
+      type: 3}
+    position: {x: -2, y: 0, z: 1}
+    uniqueID: 0
+  - trayPrefab: {fileID: 4456156309129873927, guid: 227ea20fba322ee4fb4558bc0b9302c1,
+      type: 3}
+    position: {x: -2, y: 0, z: -2}
+    uniqueID: 0
+  - trayPrefab: {fileID: 4456156309129873927, guid: 1958579e6464046409da4b2277e4f989,
+      type: 3}
+    position: {x: 1, y: 0, z: -2}
+    uniqueID: 0
+  - trayPrefab: {fileID: 4456156309129873927, guid: 1c614fe55f752ad4e8c893bef219fa89,
+      type: 3}
+    position: {x: 1, y: 0, z: 1}
+    uniqueID: 0
+  <DirectionalTrays>k__BackingField: []
+  <BlockedTrays>k__BackingField: []
+  <Spawners>k__BackingField: []
+  <ActiveFoodTheme>k__BackingField:
+  - {fileID: 11400000, guid: 99472aa47fb2f3a4588e4c5d814a85d7, type: 2}
+  - {fileID: 11400000, guid: a832d9002ef74b9478932f11d551d782, type: 2}
+  - {fileID: 11400000, guid: 679d6a23db85a2a45a84602250b38e9d, type: 2}
+  - {fileID: 11400000, guid: b9573f544e951954f835fcef28c4502a, type: 2}
+  - {fileID: 11400000, guid: 7f76b3459218e2842a8be25ac4005cae, type: 2}

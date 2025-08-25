@@ -16,18 +16,22 @@ public class EffectManager : MonoBehaviour
     }
 
 
-    private void SpawnEffect(GameObject prefab, Vector3 position)
+    private void SpawnEffectOnTrayFinished(object sender, EventArgs e)
     {
-        if (prefab != null)
+        if(sender is TrayVisual tray)
         {
-            GameObject effect = Instantiate(prefab, position, Quaternion.identity);
+            SpawnEffect(effectRefs.trayFinised[0], tray.transform.position);
         }
     }
 
-    private void SpawnEffectOnTrayFinished(object sender, EventArgs e)
+    private void SpawnEffectOnBlockedTray(object sender, EventArgs e)
     {
-        print("dsfjkfsdkjl");
+        if (sender is BlockedTray tray)
+        {
+            SpawnEffect(effectRefs.boxDestroy[0], tray.transform.position + tray.GetVisualOffSet() + Vector3.up);
+        }
     }
+
 
     private void SpawnComboEffect(object sender, int combo)
     {
@@ -39,22 +43,33 @@ public class EffectManager : MonoBehaviour
             GameObject prefab = effectRefs.combo[index];
             if (prefab != null)
             {
-                Vector3 testVEc = new Vector3(0, combo, 0);
-                Vector3 spawnPos = tray.transform.position + tray.GetVisualOffSet() + Vector3.up + testVEc * 0.5f;
+                Vector3 yLayer = new Vector3(0, combo, 0);
+                Vector3 spawnPos = tray.transform.position + tray.GetVisualOffSet() + Vector3.up + yLayer * 0.5f;
                 SpawnEffect(prefab, spawnPos);
             }
         }
     }
 
+    private void SpawnEffect(GameObject prefab, Vector3 position)
+    {
+        if (prefab != null)
+        {
+            GameObject effect = Instantiate(prefab, position, Quaternion.identity);
+        }
+    }
+
+
     private void AssignSignal()
     {
-        GameEventManager.OnTrayFinished += SpawnEffectOnTrayFinished;
+        GameEventManager.OnTrayGoesOut += SpawnEffectOnTrayFinished;
+        GameEventManager.OnBlockedTrayFinished += SpawnEffectOnBlockedTray;
         GameEventManager.OnComboChanged += SpawnComboEffect;
     }
 
     private void ResetSignal()
     {
-        GameEventManager.OnTrayFinished -= SpawnEffectOnTrayFinished;
+        GameEventManager.OnTrayGoesOut -= SpawnEffectOnTrayFinished;
+        GameEventManager.OnBlockedTrayFinished -= SpawnEffectOnBlockedTray;
         GameEventManager.OnComboChanged -= SpawnComboEffect;
     }
 }
