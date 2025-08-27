@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class PlacementSystem : MonoBehaviour
 {
@@ -15,7 +16,10 @@ public class PlacementSystem : MonoBehaviour
     [SerializeField] public GridMapData[] currentMapGrid;
     [SerializeField] private GameObject wallPrefab;
     [SerializeField] private GameObject cornerWallPrefab;
+    [SerializeField] private GameObject halfWallPrefab;   
+    [SerializeField] private GameObject fullWallPrefab;
     [SerializeField] public Transform gridParent;
+    [SerializeField] private WallPrefabSet wallPrefabs;
 
     public GridMapData currentMap;
     public Dictionary<Vector3Int, GridObjects> occupiedCells = new();
@@ -48,7 +52,7 @@ public class PlacementSystem : MonoBehaviour
             currentMapIndex = 0; // Reset to first map if out of bounds
         }
         print("current map num: " + currentMapIndex);
-        currentMap = currentMapGrid[currentMapIndex];
+        //currentMap = currentMapGrid[currentMapIndex];
         LoadMap();
     }
 
@@ -56,7 +60,6 @@ public class PlacementSystem : MonoBehaviour
     {
         GameManager.Instance.ResetState(currentMap.MaxMoveCount);
         ClearGrid();
-        SpawnBlockedCells();
         SnapCameraToCenter();
         plannedTrayData.Clear();
         traySpawners.Clear();
@@ -84,7 +87,7 @@ public class PlacementSystem : MonoBehaviour
         StartCoroutine(SpawnTrays(foodPlan.NormalTrayFoodByData, 0.1f));
         SpawnTraySpawners();
 
-        GenerateBoundaryWalls();
+        SpawnMapFromMatrix();
     }
 
     private void ClearGrid()
@@ -157,142 +160,49 @@ public class PlacementSystem : MonoBehaviour
 
     private bool IsCellBlocked(Vector3Int cell)
     {
-        return currentMap.BlockedCells.Contains(cell);
+        return currentMap != null && currentMap.IsCellBlockedWorld(cell);
     }
 
     #endregion
 
     #region Generate statics walls and blocked cells
-    private void GenerateBoundaryWalls()
+    private void SpawnMapFromMatrix()
     {
-        Vector2Int size = currentMap.GridSize;
-        Vector3Int origin = currentMap.GridOrigin;
+        int width = currentMap.cellMatrix.GetLength(0);
+        int height = currentMap.cellMatrix.GetLength(1);
 
-        int halfX = size.x / 2;
-        int halfZ = size.y / 2;
-
-        int startX = origin.x - halfX - 1;
-        int endX = origin.x + halfX + (size.x % 2 == 0 ? 0 : 1);
-
-        int startZ = origin.z - halfZ - 1;
-        int endZ = origin.z + halfZ + (size.y % 2 == 0 ? 0 : 1);
-
-        // Top Wall (Z = endZ), skip corners
-        for (int x = startX + 1; x < endX; x++)
+        for (int x = 0; x < width; x++)
         {
-            Vector3Int cell = new(x, 0, endZ);
-            if (IsCellBlocked(cell) || IsTraySpawnerAt(cell)) continue;
-            SpawnWall(cell, Quaternion.identity);
-        }
-
-        // Bottom Wall (Z = startZ), skip corners
-        for (int x = startX + 1; x < endX; x++)
-        {
-            Vector3Int cell = new(x, 0, startZ);
-            if (IsCellBlocked(cell) || IsTraySpawnerAt(cell)) continue;
-            SpawnWall(cell, Quaternion.identity);
-        }
-
-        // Left Wall (X = startX), skip corners
-        for (int z = startZ + 1; z < endZ; z++)
-        {
-            Vector3Int cell = new(startX, 0, z);
-            if (IsCellBlocked(cell) || IsTraySpawnerAt(cell)) continue;
-            SpawnWall(cell, Quaternion.Euler(0, -90, 0));
-        }
-
-        // Right Wall (X = endX), skip corners
-        for (int z = startZ + 1; z < endZ; z++)
-        {
-            Vector3Int cell = new(endX, 0, z);
-            if (IsCellBlocked(cell) || IsTraySpawnerAt(cell)) continue;
-            SpawnWall(cell, Quaternion.Euler(0, -90, 0));
-        }
-
-        // Now spawn corners
-        SpawnCornerWalls(startX, endX, startZ, endZ);
-    }
-
-    private bool IsTraySpawnerAt(Vector3Int cell)
-    {
-        return currentMap.Spawners.Any(spawner => spawner.position == cell);
-    }
-
-    private void SpawnWall(Vector3Int cell, Quaternion rotation)
-    {
-        Vector3 worldPos = grid.CellToWorld(cell);
-        GameObject wall = Instantiate(wallPrefab, worldPos, Quaternion.identity, gridParent);
-
-        if (wall.TryGetComponent(out EnviromentWall env))
-        {
-            env.SetGridPosition(cell);
-
-            var pivot = env.visual;
-            if (pivot != null)
+            for (int z = 0; z < height; z++)
             {
-                // Default values
-                pivot.localPosition = new Vector3(0.5f, 0f, 0.25f);
-                pivot.localRotation = Quaternion.identity;
+                var type = currentMap.cellMatrix[x, z];
+                if (type == CellType.Empty) continue;
 
-                bool isVertical = rotation == Quaternion.Euler(0, -90, 0);
-                bool isBottom = cell.z < currentMap.GridOrigin.z;
+                var worldCell = currentMap.MatrixToWorldCell(x, z);
 
-                if (isVertical)
+                // Skip if trays/spawners already placed
+                if (currentMap.Trays.Exists(t => t.position == worldCell) ||
+                    currentMap.DirectionalTrays.Exists(t => t.position == worldCell) ||
+                    currentMap.BlockedTrays.Exists(t => t.position == worldCell) ||
+                    currentMap.Spawners.Exists(s => s.position == worldCell))
+                    continue;
+
+                var (prefab, rot, offset) = wallPrefabs.GetPrefab(type, worldCell, currentMap.GridOrigin);
+                if (prefab == null) continue;
+
+                var obj = Instantiate(prefab, grid.CellToWorld(worldCell), Quaternion.identity, gridParent);
+
+                if (obj.TryGetComponent(out EnviromentWall env))
                 {
-                    pivot.localRotation = Quaternion.Euler(0, 90f, 0);
+                    env.SetGridPosition(worldCell);
 
-                    if (cell.x > currentMap.GridOrigin.x) // Right wall
-                        pivot.localPosition = new Vector3(0.25f, 0f, 0.5f);
-                    else // Left wall
-                        pivot.localPosition = new Vector3(0.75f, 0f, 0.5f);
-                }
-                else if (isBottom)
-                {
-                    pivot.localPosition = new Vector3(0.5f, 0f, 0.75f); // Bottom wall
+                    if (env.visual != null)
+                    {
+                        env.visual.localRotation = rot;
+                        env.visual.localPosition = offset;
+                    }
                 }
             }
-        }
-    }
-
-    private void SpawnCornerWalls(int startX, int endX, int startZ, int endZ)
-    {
-        if (cornerWallPrefab == null) return;
-
-        var corners = new (Vector3Int cell, float yRot, Vector3 pivotPos)[]
-        {
-        // cell,         Y rot,      pivot localPosition
-        (new Vector3Int(endX, 0, endZ),    -90f, new Vector3(0.25f, 0f, 0.25f)), // Top Right
-        (new Vector3Int(endX, 0, startZ),    0f, new Vector3(0.25f, 0f, 0.75f)), // Bottom Right
-        (new Vector3Int(startX, 0, startZ),  90f, new Vector3(0.75f, 0f, 0.75f)), // Bottom Left
-        (new Vector3Int(startX, 0, endZ),   180f, new Vector3(0.75f, 0f, 0.25f)), // Top Left
-        };
-
-        foreach (var (cell, yRot, pivotOffset) in corners)
-        {
-            Vector3 worldPos = grid.CellToWorld(cell);
-            GameObject corner = Instantiate(cornerWallPrefab, worldPos, Quaternion.identity, gridParent);
-
-            if (corner.TryGetComponent(out EnviromentWall env))
-            {
-                env.SetGridPosition(cell);
-
-                var pivot = env.visual;
-                if (pivot != null)
-                {
-                    pivot.localRotation = Quaternion.Euler(0, yRot, 0);
-                    pivot.localPosition = pivotOffset;
-                }
-            }
-        }
-    }
-
-    private void SpawnBlockedCells()
-    {
-        foreach (Vector3Int blockedCell in currentMap.BlockedCells)
-        {
-            var wall = Instantiate(wallPrefab, grid.CellToWorld(blockedCell), Quaternion.identity, gridParent);
-            var env = wall.GetComponent<EnviromentWall>();
-            env.SetGridPosition(blockedCell);
         }
     }
 

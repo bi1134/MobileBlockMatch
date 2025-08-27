@@ -2303,7 +2303,12 @@ MonoBehaviour:
     type: 3}
   cornerWallPrefab: {fileID: 718713443012183331, guid: f1d25b85c7eb36f4db24938197b3017f,
     type: 3}
+  halfWallPrefab: {fileID: 718713443012183331, guid: ba957889cffa64a4ca725f3bc12fa469,
+    type: 3}
+  fullWallPrefab: {fileID: 718713443012183331, guid: eda26cabbd9771841a58cb01ab1fe331,
+    type: 3}
   gridParent: {fileID: 1551921499}
+  wallPrefabs: {fileID: 11400000, guid: 4efc5168365375f4d9010fb9ea24b66d, type: 2}
   currentMap: {fileID: 11400000, guid: 15bd94556dbd98c44a6a1449d72379f2, type: 2}
 --- !u!1 &605245000
 GameObject:
@@ -5193,13 +5198,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1463457278}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5735764, y: 0, z: 0, w: 0.8191521}
+  m_LocalRotation: {x: 0.5824209, y: 0, z: 0, w: 0.81288743}
   m_LocalPosition: {x: 0, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 70, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 71.242, y: 0, z: 0}
 --- !u!1 &1477622390
 GameObject:
   m_ObjectHideFlags: 0

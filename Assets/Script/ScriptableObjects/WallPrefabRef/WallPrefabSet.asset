@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bd78b287c7c788498f6553f048b181e, type: 3}
+  m_Name: WallPrefabSet
+  m_EditorClassIdentifier: 
+  halfWallPrefab: {fileID: 718713443012183331, guid: 3d7b952757aac1945a7c4176acb08759,
+    type: 3}
+  fullWallPrefabHorizontal: {fileID: 718713443012183331, guid: eda26cabbd9771841a58cb01ab1fe331,
+    type: 3}
+  fullWallPrefabVertical: {fileID: 718713443012183331, guid: 35c443941a4260940855c4a27ccf8d7a,
+    type: 3}
+  cornerWallPrefab: {fileID: 718713443012183331, guid: f1d25b85c7eb36f4db24938197b3017f,
+    type: 3}
+  blendTopPrefab: {fileID: 718713443012183331, guid: ba957889cffa64a4ca725f3bc12fa469,
+    type: 3}
+  blendBottomPrefab: {fileID: 718713443012183331, guid: 63c14f1670ad00f4eb027c35245354e8,
+    type: 3}
+  blendLeftPrefab: {fileID: 718713443012183331, guid: 1b795cdf4cee669458cd24effae51ad2,
+    type: 3}
+  blendRightPrefab: {fileID: 718713443012183331, guid: 22eb6b1c5e004914384523b44cb35636,
+    type: 3}
+  lWallPrefab: {fileID: 718713443012183331, guid: ecb32e83c0471aa46b30b9b6d4a05d4d,
+    type: 3}

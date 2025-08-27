@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abe13ef36298e5c429a08bd64af99f87, type: 3}
-  m_Name: level1
+  m_Script: {fileID: 11500000, guid: 9ab6a8a3d7b493741b441357dda425df, type: 3}
+  m_Name: NewGridMapTest
   m_EditorClassIdentifier: 
   serializationData:
     SerializedFormat: 2
@@ -26,28 +26,10 @@ MonoBehaviour:
       Data: 0|CellType[,], Assembly-CSharp
     - Name: 
       Entry: 12
-      Data: 25
+      Data: 49
     - Name: ranks
       Entry: 1
-      Data: 5|5
-    - Name: 
-      Entry: 3
-      Data: 4
-    - Name: 
-      Entry: 3
-      Data: 3
-    - Name: 
-      Entry: 3
-      Data: 3
-    - Name: 
-      Entry: 3
-      Data: 3
-    - Name: 
-      Entry: 3
-      Data: 6
-    - Name: 
-      Entry: 3
-      Data: 3
+      Data: 7|7
     - Name: 
       Entry: 3
       Data: 0
@@ -59,10 +41,13 @@ MonoBehaviour:
       Data: 0
     - Name: 
       Entry: 3
-      Data: 3
+      Data: 0
     - Name: 
       Entry: 3
-      Data: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
     - Name: 
       Entry: 3
       Data: 0
@@ -74,10 +59,13 @@ MonoBehaviour:
       Data: 0
     - Name: 
       Entry: 3
-      Data: 3
+      Data: 0
     - Name: 
       Entry: 3
-      Data: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
     - Name: 
       Entry: 3
       Data: 0
@@ -89,39 +77,123 @@ MonoBehaviour:
       Data: 0
     - Name: 
       Entry: 3
-      Data: 3
+      Data: 0
     - Name: 
       Entry: 3
-      Data: 5
+      Data: 0
     - Name: 
       Entry: 3
-      Data: 3
+      Data: 0
     - Name: 
       Entry: 3
-      Data: 3
+      Data: 0
     - Name: 
       Entry: 3
-      Data: 3
+      Data: 14
     - Name: 
       Entry: 3
-      Data: 7
+      Data: 13
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 15
+    - Name: 
+      Entry: 3
+      Data: 12
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
+    - Name: 
+      Entry: 3
+      Data: 0
     - Name: 
       Entry: 13
       Data: 
     - Name: 
       Entry: 8
       Data: 
-  GridSize: {x: 3, y: 3}
+  GridSize: {x: 5, y: 5}
   <GridOrigin>k__BackingField: {x: 0, y: 0, z: 0}
-  <MaxMoveCount>k__BackingField: 20
+  <MaxMoveCount>k__BackingField: 10
   <Trays>k__BackingField:
-  - trayPrefab: {fileID: 4456156309129873927, guid: 227ea20fba322ee4fb4558bc0b9302c1,
+  - trayPrefab: {fileID: 4456156309129873927, guid: eacd2ee4dad82ff4ab5330a397c885d3,
       type: 3}
     position: {x: -1, y: 0, z: 0}
     uniqueID: 0
-  - trayPrefab: {fileID: 4456156309129873927, guid: eacd2ee4dad82ff4ab5330a397c885d3,
+  - trayPrefab: {fileID: 4456156309129873927, guid: 92a212605e5019e4796a54418e122ca7,
       type: 3}
-    position: {x: 1, y: 0, z: 0}
+    position: {x: 1, y: 0, z: -1}
     uniqueID: 1
   <DirectionalTrays>k__BackingField: []
   <BlockedTrays>k__BackingField: []
