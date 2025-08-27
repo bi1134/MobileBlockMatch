@@ -7,11 +7,17 @@ using System.Collections.Generic;
 public enum CellType
 {
     Empty,
+    Floor,
 
     // Walls
     FullWallHorizontal,
     FullWallVertical,
-    HalfWall,
+
+    HalfWall,          // tool / legacy alias
+    HalfWallTop,       // faces "top" (north)
+    HalfWallRight,     // east
+    HalfWallBottom,    // south
+    HalfWallLeft,      // west
 
     // Corners
     CornerTopLeft,
@@ -25,12 +31,13 @@ public enum CellType
     BlendLeft,
     BlendRight,
 
-    // L-shaped walls (3 sides filled, 1 side empty)
-    LWall0,      // empty spot bottom-left (default orientation)
-    LWall90,     // rotated +90 Y (empty spot top-left)
-    LWall180,    // rotated +180 Y (empty spot top-right)
-    LWall270,    // rotated +270 Y (empty spot bottom-right)
+    // L-walls
+    LWall0,
+    LWall90,
+    LWall180,
+    LWall270,
 }
+
 
 [CreateAssetMenu(fileName = "GridMapData", menuName = "Scriptable Objects/GridMapData")]
 public class GridMapData : SerializedScriptableObject
@@ -98,7 +105,7 @@ public class GridMapData : SerializedScriptableObject
             return false;
 
         var t = cellMatrix[x, z];
-        return t != CellType.Empty;
+        return t != CellType.Empty && t != CellType.Floor;
     }
 
     // Legacy-style enumerable so your old loops still work
@@ -143,12 +150,11 @@ public class GridMapData : SerializedScriptableObject
         GUILayout.Space(5);
         GUILayout.Label("Paint Tool", EditorStyles.boldLabel);
 
-        // Dropdown for selecting CellType
+        // Dropdown for selecting CellType (will list the new HalfWall* too, you can ignore them)
         activePaintType = (CellType)EditorGUILayout.EnumPopup("Active Paint Type", activePaintType);
 
         GUILayout.Space(5);
 
-        // Extra buttons
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Clear All"))
         {
@@ -156,38 +162,70 @@ public class GridMapData : SerializedScriptableObject
         }
         if (GUILayout.Button("Fill with Active Type"))
         {
-            int width = cellMatrix.GetLength(0);
-            int height = cellMatrix.GetLength(1);
-            for (int x = 0; x < width; x++)
-                for (int y = 0; y < height; y++)
-                    cellMatrix[x, y] = activePaintType;
+            int w = cellMatrix.GetLength(0);
+            int h = cellMatrix.GetLength(1);
+            for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
+                    cellMatrix[x, y] = activePaintType == CellType.HalfWall
+                        ? CellType.HalfWallTop // default orientation if filling with HalfWall tool
+                        : activePaintType;
         }
         GUILayout.EndHorizontal();
     }
 
-    private static CellType DrawCell(Rect rect, CellType value)
+    private static bool IsHalfWall(CellType t) =>
+        t == CellType.HalfWallTop || t == CellType.HalfWallRight ||
+        t == CellType.HalfWallBottom || t == CellType.HalfWallLeft;
+
+    private static CellType NextHalfWall(CellType t) => t switch
+    {
+        CellType.HalfWallTop => CellType.HalfWallRight,
+        CellType.HalfWallRight => CellType.HalfWallBottom,
+        CellType.HalfWallBottom => CellType.HalfWallLeft,
+        CellType.HalfWallLeft => CellType.HalfWallTop,
+        _ => CellType.HalfWallTop
+    };
+
+    private static bool IsCorner(CellType t) =>
+        t == CellType.CornerTopLeft || t == CellType.CornerTopRight ||
+        t == CellType.CornerBottomLeft || t == CellType.CornerBottomRight;
+
+    private static CellType NextCorner(CellType t) => t switch
+    {
+        CellType.CornerTopLeft => CellType.CornerTopRight,
+        CellType.CornerTopRight => CellType.CornerBottomRight,
+        CellType.CornerBottomRight => CellType.CornerBottomLeft,
+        CellType.CornerBottomLeft => CellType.CornerTopLeft,
+        _ => CellType.CornerTopLeft
+    };
+
+    // NOTE: Odin supports this signature to also receive matrix indices.
+    private static CellType DrawCell(Rect rect, CellType value, int x, int y)
     {
         float padding = rect.width * 0.2f;
-        Rect padded = new Rect(rect.x + padding / 2, rect.y + padding / 2, rect.width - padding, rect.height - padding);
+        Rect padded = new Rect(rect.x + padding / 2, rect.y + padding / 2,
+                               rect.width - padding, rect.height - padding);
 
+        // Base color
         Color c = value switch
         {
             CellType.Empty => Color.white,
-            CellType.HalfWall => Color.red,
-            CellType.FullWallHorizontal => new Color(0.2f, 0.2f, 1f),   // blue-ish
-            CellType.FullWallVertical => new Color(0.4f, 0.4f, 1f),   // lighter blue
-            CellType.LWall0 => new Color(1f, 0.6f, 0f),   // orange
-            CellType.LWall90 => new Color(1f, 0.8f, 0.2f),
-            CellType.LWall180 => new Color(1f, 1f, 0.4f),
-            CellType.LWall270 => new Color(0.9f, 0.7f, 0.1f),
+            CellType.Floor => new Color(0.92f, 0.92f, 0.92f),
+
+            CellType.FullWallHorizontal => new Color(0.2f, 0.2f, 1f),
+            CellType.FullWallVertical => new Color(0.4f, 0.4f, 1f),
+
+            CellType.HalfWallTop => new Color(1f, 0.3f, 0.3f),
+            CellType.HalfWallRight => new Color(1f, 0.35f, 0.35f),
+            CellType.HalfWallBottom => new Color(1f, 0.4f, 0.4f),
+            CellType.HalfWallLeft => new Color(1f, 0.45f, 0.45f),
+            CellType.HalfWall => new Color(1f, 0.3f, 0.3f),
+
             CellType.CornerTopLeft => new Color(0f, 0.7f, 0f),
             CellType.CornerTopRight => new Color(0f, 0.9f, 0f),
             CellType.CornerBottomLeft => new Color(0f, 0.5f, 0f),
             CellType.CornerBottomRight => new Color(0f, 0.3f, 0f),
-            CellType.BlendTop => Color.cyan,
-            CellType.BlendBottom => Color.magenta,
-            CellType.BlendLeft => Color.yellow,
-            CellType.BlendRight => new Color(1f, 0.5f, 0f),
+
             _ => Color.gray
         };
 
@@ -200,16 +238,89 @@ public class GridMapData : SerializedScriptableObject
         Handles.DrawLine(new Vector3(rect.x, rect.y), new Vector3(rect.x, rect.yMax));
         Handles.DrawLine(new Vector3(rect.xMax, rect.y), new Vector3(rect.xMax, rect.yMax));
 
-        // Paint interaction
-        if ((Event.current.type == EventType.MouseDown || Event.current.type == EventType.MouseDrag)
-        && rect.Contains(Event.current.mousePosition))
+        // HalfWall arrows
+        if (value == CellType.HalfWall || IsHalfWall(value))
+        {
+            Vector2 center = rect.center;
+            float len = rect.width * 0.28f;
+
+            Vector2 dir = value switch
+            {
+                CellType.HalfWallTop => new Vector2(0f, -1f),
+                CellType.HalfWallRight => new Vector2(1f, 0f),
+                CellType.HalfWallBottom => new Vector2(0f, 1f),
+                CellType.HalfWallLeft => new Vector2(-1f, 0f),
+                _ => new Vector2(0f, -1f)
+            };
+
+            Vector2 tip = center + dir.normalized * len;
+            Handles.color = Color.black;
+            Handles.DrawLine(center, tip);
+
+            float head = rect.width * 0.14f;
+            Vector2 perp = new Vector2(-dir.y, dir.x).normalized;
+            Vector3 p0 = new Vector3(tip.x, tip.y, 0f);
+            Vector3 p1 = new Vector3(tip.x - dir.x * head + perp.x * head * 0.6f,
+                                     tip.y - dir.y * head + perp.y * head * 0.6f, 0f);
+            Vector3 p2 = new Vector3(tip.x - dir.x * head - perp.x * head * 0.6f,
+                                     tip.y - dir.y * head - perp.y * head * 0.6f, 0f);
+            Handles.DrawAAConvexPolygon(p0, p1, p2);
+        }
+
+        // Corner "L-shape" indicator
+        if (IsCorner(value))
+        {
+            Handles.color = Color.black;
+            float inset = rect.width * 0.25f;
+
+            switch (value)
+            {
+                case CellType.CornerTopLeft:
+                    Handles.DrawLine(new Vector2(rect.x + inset, rect.y), new Vector2(rect.x + inset, rect.y + inset));
+                    Handles.DrawLine(new Vector2(rect.x, rect.y + inset), new Vector2(rect.x + inset, rect.y + inset));
+                    break;
+
+                case CellType.CornerTopRight:
+                    Handles.DrawLine(new Vector2(rect.xMax - inset, rect.y), new Vector2(rect.xMax - inset, rect.y + inset));
+                    Handles.DrawLine(new Vector2(rect.xMax - inset, rect.y + inset), new Vector2(rect.xMax, rect.y + inset));
+                    break;
+
+                case CellType.CornerBottomLeft:
+                    Handles.DrawLine(new Vector2(rect.x + inset, rect.yMax - inset), new Vector2(rect.x, rect.yMax - inset));
+                    Handles.DrawLine(new Vector2(rect.x + inset, rect.yMax - inset), new Vector2(rect.x + inset, rect.yMax));
+                    break;
+
+                case CellType.CornerBottomRight:
+                    Handles.DrawLine(new Vector2(rect.xMax - inset, rect.yMax - inset), new Vector2(rect.xMax, rect.yMax - inset));
+                    Handles.DrawLine(new Vector2(rect.xMax - inset, rect.yMax - inset), new Vector2(rect.xMax - inset, rect.yMax));
+                    break;
+            }
+        }
+
+        // Mouse interaction (rotation only on mouse down, not drag)
+        if (Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
         {
             if (Event.current.button == 0)
             {
                 if (Event.current.shift)
+                {
                     value = CellType.Empty;
+                }
                 else
-                    value = activePaintType;
+                {
+                    if (activePaintType == CellType.HalfWall)
+                    {
+                        value = IsHalfWall(value) ? NextHalfWall(value) : CellType.HalfWallTop;
+                    }
+                    else if (activePaintType == CellType.CornerTopLeft)
+                    {
+                        value = IsCorner(value) ? NextCorner(value) : CellType.CornerTopLeft;
+                    }
+                    else
+                    {
+                        value = activePaintType;
+                    }
+                }
 
                 GUI.changed = true;
                 Event.current.Use();

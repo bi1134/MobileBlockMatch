@@ -18,7 +18,17 @@ public class WallPrefabSet : ScriptableObject
         switch (type)
         {
             case CellType.HalfWall:
-                return (halfWallPrefab, GetHalfWallRotation(worldCell, gridOrigin, out var halfOffset), halfOffset);
+            case CellType.HalfWallTop:
+                return (halfWallPrefab, Quaternion.identity, new Vector3(0.5f, 0f, 0.25f)); // top/north
+
+            case CellType.HalfWallBottom:
+                return (halfWallPrefab, Quaternion.identity, new Vector3(0.5f, 0f, 0.75f)); // bottom/south
+
+            case CellType.HalfWallLeft:
+                return (halfWallPrefab, Quaternion.Euler(0, 90f, 0), new Vector3(0.75f, 0f, 0.5f)); // west
+
+            case CellType.HalfWallRight:
+                return (halfWallPrefab, Quaternion.Euler(0, 90f, 0), new Vector3(0.25f, 0f, 0.5f)); // east
 
             case CellType.FullWallHorizontal:
                 return (fullWallPrefabHorizontal, Quaternion.identity, Vector3.zero);
@@ -28,25 +38,19 @@ public class WallPrefabSet : ScriptableObject
 
             case CellType.LWall0:
                 return (lWallPrefab, Quaternion.identity, new Vector3(0.5f, 0, 0.5f));
-
             case CellType.LWall90:
                 return (lWallPrefab, Quaternion.Euler(0, 90f, 0), new Vector3(0.5f, 0, 0.5f));
-
             case CellType.LWall180:
                 return (lWallPrefab, Quaternion.Euler(0, 180f, 0), new Vector3(0.5f, 0, 0.5f));
-
             case CellType.LWall270:
                 return (lWallPrefab, Quaternion.Euler(0, 270f, 0), new Vector3(0.5f, 0, 0.5f));
 
             case CellType.CornerTopLeft:
                 return (cornerWallPrefab, Quaternion.Euler(0, 180f, 0), new Vector3(0.75f, 0f, 0.25f));
-
             case CellType.CornerTopRight:
                 return (cornerWallPrefab, Quaternion.Euler(0, -90f, 0), new Vector3(0.25f, 0f, 0.25f));
-
             case CellType.CornerBottomLeft:
                 return (cornerWallPrefab, Quaternion.Euler(0, 90f, 0), new Vector3(0.75f, 0f, 0.75f));
-
             case CellType.CornerBottomRight:
                 return (cornerWallPrefab, Quaternion.identity, new Vector3(0.25f, 0f, 0.75f));
 
@@ -59,26 +63,4 @@ public class WallPrefabSet : ScriptableObject
         }
     }
 
-    private Quaternion GetHalfWallRotation(Vector3Int worldCell, Vector3Int origin, out Vector3 offset)
-    {
-        // Default: top wall
-        offset = new Vector3(0.5f, 0f, 0.25f);
-        Quaternion rot = Quaternion.identity;
-
-        bool isVertical = Mathf.Abs(worldCell.x - origin.x) > Mathf.Abs(worldCell.z - origin.z);
-
-        if (isVertical)
-        {
-            rot = Quaternion.Euler(0, 90f, 0);
-            offset = (worldCell.x > origin.x)
-                ? new Vector3(0.25f, 0f, 0.5f) // Right
-                : new Vector3(0.75f, 0f, 0.5f); // Left
-        }
-        else if (worldCell.z < origin.z)
-        {
-            offset = new Vector3(0.5f, 0f, 0.75f); // Bottom
-        }
-
-        return rot;
-    }
 }

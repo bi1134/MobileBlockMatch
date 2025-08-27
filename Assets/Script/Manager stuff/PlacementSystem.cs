@@ -52,7 +52,7 @@ public class PlacementSystem : MonoBehaviour
             currentMapIndex = 0; // Reset to first map if out of bounds
         }
         print("current map num: " + currentMapIndex);
-        //currentMap = currentMapGrid[currentMapIndex];
+        currentMap = currentMapGrid[currentMapIndex];
         LoadMap();
     }
 
@@ -158,11 +158,6 @@ public class PlacementSystem : MonoBehaviour
                cell.z >= minZ && cell.z <= maxZ;
     }
 
-    private bool IsCellBlocked(Vector3Int cell)
-    {
-        return currentMap != null && currentMap.IsCellBlockedWorld(cell);
-    }
-
     #endregion
 
     #region Generate statics walls and blocked cells
@@ -185,6 +180,10 @@ public class PlacementSystem : MonoBehaviour
                     currentMap.DirectionalTrays.Exists(t => t.position == worldCell) ||
                     currentMap.BlockedTrays.Exists(t => t.position == worldCell) ||
                     currentMap.Spawners.Exists(s => s.position == worldCell))
+                    continue;
+
+                // Floors are "walkable" cells -> but no prefab right now
+                if (type == CellType.Floor)
                     continue;
 
                 var (prefab, rot, offset) = wallPrefabs.GetPrefab(type, worldCell, currentMap.GridOrigin);
@@ -467,29 +466,16 @@ public class PlacementSystem : MonoBehaviour
     public void SnapCameraToCenter()
     {
         Camera cam = Camera.main;
-        if (!cam) return;
+        if (!cam || currentMap == null) return;
 
-        Vector2Int size = currentMap.GridSize;
-        int width = size.x;
-        int height = size.y; // if needed later, same rules apply
+        int width = currentMap.GridSize.x;
+        int height = currentMap.GridSize.y;
 
-        //x center
-        float centerX = (width % 2 == 0) ? 0f : 0.5f;
+        // --- rules for odd/even ---
+        float x = (width % 2 == 1) ? 0.5f : 0f;
+        float z = (height % 2 == 1) ? -2.5f : -3.5f;
 
-        //z center
-        float centerZ = -(width * 0.5f);
-
-        //y unchanged
-        float centerY = cam.transform.position.y;
-
-        cam.transform.position = new Vector3(centerX, centerY, centerZ);
-
-        //orthographic size
-        cam.orthographicSize = width + 0.75f;
-
-        //camera rotation
-        float rotationX = 90f - (width * 3.25f);
-        cam.transform.rotation = Quaternion.Euler(rotationX, 0f, 0f);
+        cam.transform.position = new Vector3(x, 10f, z);
     }
 
     #endregion
